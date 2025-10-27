@@ -14,38 +14,65 @@ import { useCart } from "@/store/useCart";
 import { CartItem } from "@/types";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import { clearCartDb } from "@/actions/cart";
+import CartItemComponent from "./CartItemComponent";
 
 const Cart = ({ initialCartItems }: { initialCartItems?: CartItem[] }) => {
-  const { cartItems, setCartItems, clearCart } = useCart();
+  const {
+    cartItems,
+    setCartItems,
+    increaseItemQuantity,
+    decreaseItemQuantity,
+    removeFromCart,
+  } = useCart();
 
   useEffect(() => {
     if (initialCartItems) {
       setCartItems(initialCartItems);
     }
   }, []);
+
+  async function handleClearCart() {
+    if (cartItems.length <= 0) return;
+    if (!cartItems[0].cartId) return;
+    await clearCartDb(cartItems[0].cartId);
+    setCartItems([]);
+  }
   return (
     <Sheet>
       <SheetTrigger>
         <ShoppingCart />
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="max-w-[500px] w-full">
         <SheetHeader>
-          <SheetTitle>Cart</SheetTitle>
+          <SheetTitle className="text-2xl">Cart</SheetTitle>
         </SheetHeader>
-
-        {cartItems.length <= 0
-          ? "Your cart is empty"
-          : cartItems.map((item) => (
-              <div key={item.id}>
-                <p>{item.title}</p>
-                <p>{item.size}</p>
-                <p>{item.color}</p>
-                <p>{item.price}</p>
-                <p>{item.quantity}</p>
-              </div>
-            ))}
+        <div className="flex flex-col gap-2 items-center overflow-y-auto">
+          {cartItems.length <= 0
+            ? "Your cart is empty"
+            : cartItems.map((item) => (
+                <CartItemComponent
+                  key={item.id}
+                  item={item}
+                  increaseItemQuantity={increaseItemQuantity}
+                  decreaseItemQuantity={decreaseItemQuantity}
+                  removeFromCart={removeFromCart}
+                />
+              ))}
+        </div>
         <SheetFooter>
-          <Button variant={"default"} onClick={() => clearCart()}>
+          {cartItems.length > 0 ? (
+            <div className="flex justify-between text-xl font-semibold">
+              <p>Total:</p>
+              <p>
+                {cartItems.reduce(
+                  (total, item) => total + item.price * item.quantity,
+                  0
+                )}
+              </p>
+            </div>
+          ) : null}
+          <Button variant={"default"} onClick={handleClearCart}>
             Clear Cart
           </Button>
           <Button asChild variant={"outline"}>

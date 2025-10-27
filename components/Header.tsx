@@ -35,6 +35,7 @@ const Header = async () => {
       weight: item.productVariant.product.weight,
       dimension: item.productVariant.product.dimension,
       stockQty: item.productVariant.stock.qty,
+      cartId: item.cartId,
     })) || [];
   return (
     <header className="flex px-3 py-1 h-16 justify-around items-center">

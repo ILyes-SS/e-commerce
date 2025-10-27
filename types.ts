@@ -10,6 +10,7 @@ export type CartItem = {
   weight: number | null;
   dimension: number | null;
   stockQty: number;
+  cartId: string;
 };
 export type CartItemServer = {
   productVariant: {
@@ -35,12 +36,14 @@ export type CartItemServer = {
   };
   id: string;
   quantity: number;
+  cartId: string;
 };
 export type CartStore = {
   cartItems: CartItem[];
   addToCart: (product: CartItem) => void;
   removeFromCart: (productId: string) => void;
-  clearCart: () => void;
   getCartTotal: () => (state: any) => any;
   setCartItems: (cartItems: CartItem[]) => void;
+  increaseItemQuantity: (productId: string) => void;
+  decreaseItemQuantity: (productId: string) => void;
 };

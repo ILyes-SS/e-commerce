@@ -13,7 +13,6 @@ export const useCart = create<CartStore>((set) => ({
       cartItems: state.cartItems.filter((item) => item.id !== productId),
     })),
   setCartItems: (cartItems: CartItem[]) => set((state) => ({ cartItems })),
-  clearCart: () => set((state) => ({ cartItems: [] })),
   getCartTotal: () => {
     return (state) =>
       state.cartItems.reduce(
@@ -21,4 +20,20 @@ export const useCart = create<CartStore>((set) => ({
         0
       );
   },
+  increaseItemQuantity: (productId: string) =>
+    set((state) => ({
+      cartItems: state.cartItems.map((item) =>
+        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
+      ),
+    })),
+  decreaseItemQuantity: (productId: string) =>
+    set((state) => ({
+      cartItems: state.cartItems
+        .map((item) =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0),
+    })),
 }));
