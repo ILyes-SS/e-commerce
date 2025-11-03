@@ -2,6 +2,7 @@ import CategoriesCards from "@/components/CategoriesCards";
 import HomeCarousel from "../components/HomeCarousel";
 import prisma from "@/lib/prisma";
 import TrendingProducts from "@/components/TrendingProducts";
+import Location from "@/components/Location";
 
 export default async function Home() {
   const slides = await prisma.carouselSlide.findMany({
@@ -19,6 +20,9 @@ export default async function Home() {
       </section>
       <section className="container mx-auto">
         <TrendingProducts />
+      </section>
+      <section className="container mx-auto">
+        <Location />
       </section>
     </div>
   );
