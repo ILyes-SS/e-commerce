@@ -66,6 +66,7 @@ model Product {
 model ProductVariant {
   id             String    @id @default(uuid())
   price          Float
+  compareAtPrice Float?
   color          String?
   size           String?
   unit           String? // e.g., 'kg', 'pack of 6'

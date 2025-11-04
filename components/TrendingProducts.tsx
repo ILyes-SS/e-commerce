@@ -5,7 +5,13 @@ import ProductCard from "./ProductCard";
 const TrendingProducts = async () => {
   const trendingProducts = await prisma.trending.findMany({
     select: {
-      product: true,
+      product: {
+        include: {
+          variants: {
+            take: 1,
+          },
+        },
+      },
     },
   });
   return (
