@@ -70,6 +70,7 @@ model ProductVariant {
   color          String?
   size           String?
   unit           String? // e.g., 'kg', 'pack of 6'
+  createdAt      DateTime @default(now())
   // Relations
   product        Product   @relation(fields: [prodId], references: [id])
   prodId         String

@@ -8,7 +8,9 @@ const TrendingProducts = async () => {
       product: {
         include: {
           variants: {
-            take: 1,
+            orderBy: {
+              createdAt: "desc",
+            },
           },
         },
       },
