@@ -1,52 +1,64 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { CartItem, CartWithItems } from "@/types";
 
-export async function getCartItems(userId: string | undefined) {
+export async function getCartWithItems(
+  userId: string | undefined
+): Promise<CartWithItems> {
   try {
     const cart = await prisma.cart.upsert({
-      where: {
-        userId,
-      },
+      where: { userId },
       update: {},
-      create: {
-        userId,
-      },
-      select: {
+      create: { userId },
+      include: {
         items: {
-          select: {
-            cartId: true,
+          include: {
             productVariant: {
-              select: {
-                size: true,
-                color: true,
-                price: true,
+              include: {
                 product: true,
-                unit: true,
-                stock: {
-                  select: {
-                    qty: true,
-                  },
-                },
+                stock: true,
               },
             },
-            quantity: true,
-            id: true,
           },
         },
       },
     });
-    console.log(cart);
-    return cart?.items || null;
+
+    return cart as unknown as CartWithItems; // Type assertion needed due to Prisma's generated types
   } catch (error) {
-    console.log(error);
-    return null;
+    console.error("Error getting cart with items:", error);
+    throw error;
   }
 }
 
 export async function createCart() {}
 
-export async function addToCart() {}
+export async function addToCartDb(
+  cartId: string | undefined,
+  cartItem: CartItem
+) {
+  try {
+    const item = await prisma.cartItem.create({
+      data: {
+        quantity: cartItem.quantity,
+        productVariant: {
+          connect: {
+            id: cartItem.id,
+          },
+        },
+        cart: {
+          connect: {
+            id: cartId,
+          },
+        },
+      },
+    });
+    return item;
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 export async function removeFromCart() {}
 

@@ -14,17 +14,17 @@ import {
 } from "./ui/dropdown-menu";
 import { LogoutButton } from "./logout-button";
 import Cart from "./Cart";
-import { getCartItems } from "@/actions/cart";
-import { CartItem, CartItemServer } from "@/types";
+import { getCartWithItems } from "@/actions/cart";
+import { CartItem, CartItemServer, CartWithItems } from "@/types";
 import NavBar from "./NavBar";
 
 const Header = async () => {
   const user = await getUser();
-  const cartItemsServer: CartItemServer[] | null = (await getCartItems(
+  const cart: CartWithItems | null = (await getCartWithItems(
     user?.id
-  )) as CartItemServer[] | null;
+  )) as CartWithItems | null;
   const cartItems: CartItem[] =
-    cartItemsServer?.map((item) => ({
+    cart?.items?.map((item) => ({
       id: item.id,
       title: item.productVariant.product.name,
       image: item.productVariant.product.image,
@@ -32,16 +32,12 @@ const Header = async () => {
       price: item.productVariant.price,
       size: item.productVariant.size,
       color: item.productVariant.color,
-      unit: item.productVariant.unit,
-      weight: item.productVariant.product.weight,
-      dimension: item.productVariant.product.dimension,
       stockQty: item.productVariant.stock.qty,
       cartId: item.cartId,
     })) || [];
   return (
     <header className="">
       <div className="flex px-3 py-1 h-16 justify-around items-center">
-        {" "}
         <Image
           src="/logo.png"
           alt="Logo"
@@ -69,7 +65,6 @@ const Header = async () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem>
-                  {" "}
                   <Link href="/auth/history">
                     <HistoryIcon className="mr-2 h-4 w-4" /> History
                   </Link>

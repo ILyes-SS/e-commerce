@@ -1,3 +1,11 @@
+import {
+  Cart,
+  Product,
+  ProductImage,
+  ProductVariant,
+  Stock,
+} from "./app/generated/prisma";
+
 export type CartItem = {
   id: string;
   title: string;
@@ -6,9 +14,6 @@ export type CartItem = {
   price: number;
   size: string | null;
   color: string | null;
-  unit: string | null;
-  weight: number | null;
-  dimension: number | null;
   stockQty: number;
   cartId: string;
 };
@@ -38,6 +43,16 @@ export type CartItemServer = {
   quantity: number;
   cartId: string;
 };
+
+export type CartWithItems = Cart & {
+  items: CartItemServer[];
+};
+export type ProductVariantsImagesStock = Product & {
+  variants: (ProductVariant & { stock: Stock | null })[];
+} & {
+  images: ProductImage[];
+};
+
 export type CartStore = {
   cartItems: CartItem[];
   addToCart: (product: CartItem) => void;
