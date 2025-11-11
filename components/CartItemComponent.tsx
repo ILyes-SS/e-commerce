@@ -30,7 +30,8 @@ const CartItemComponent = ({
   }
   async function handleRemove() {
     removeFromCart(item.id);
-    await removeCartItemDb(item.id);
+    //if id does not exist remove all items with  variant id and cart id
+    await removeCartItemDb(item.id, item.id, item.cartId);
   }
   return (
     <div className="flex gap-2">

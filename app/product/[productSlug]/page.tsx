@@ -1,7 +1,6 @@
 import prisma from "@/lib/prisma";
 import ProductCarousel from "@/components/ProductCarousel";
 import ProductInfos from "@/components/ProductInfos";
-import { getUser } from "@/lib/supabase/server";
 
 const page = async ({
   params,
@@ -9,13 +8,6 @@ const page = async ({
   params: Promise<{ productSlug: string }>;
 }) => {
   const { productSlug } = await params;
-  // const user = await getUser();
-  // const cart = await prisma.cart.findUnique({
-  //   where: {
-  //     userId: user?.id,
-  //   },
-  // });
-
   const product = await prisma.product.findUnique({
     where: {
       slug: productSlug,

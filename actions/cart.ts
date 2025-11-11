@@ -54,7 +54,6 @@ export async function addToCartDb(
         },
       },
     });
-    return item;
   } catch (error) {
     console.log(error);
   }
@@ -86,7 +85,7 @@ export async function decreaseItemQuantityDb(cartItemId: string) {
       },
     });
     if (item.quantity <= 0) {
-      await removeCartItemDb(cartItemId);
+      await removeCartItemDb(item.id, item.id, item.cartId);
     }
   } catch (error) {
     console.log(error);
@@ -108,11 +107,24 @@ export async function increaseItemQuantityDb(cartItemId: string) {
     console.log(error);
   }
 }
-export async function removeCartItemDb(cartItemId: string) {
+//each cart item has one unique
+export async function removeCartItemDb(
+  cartItemId: string,
+  variantId: string,
+  cartId: string
+) {
   try {
-    await prisma.cartItem.delete({
+    await prisma.cartItem.deleteMany({
       where: {
-        id: cartItemId,
+        OR: [
+          {
+            id: cartItemId,
+          },
+          {
+            prodVariantId: variantId,
+            cartId,
+          },
+        ],
       },
     });
   } catch (error) {
