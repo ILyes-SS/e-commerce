@@ -15,10 +15,12 @@ export type CartItem = {
   size: string | null;
   color: string | null;
   stockQty: number;
+  prodVariantId: string;
   cartId: string;
 };
 export type CartItemServer = {
   productVariant: {
+    id: string;
     product: {
       id: string;
       image: string;

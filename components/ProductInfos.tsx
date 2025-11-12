@@ -37,6 +37,7 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
       size: selectedSize,
       quantity: 1,
       stockQty: selectedVariant?.stock?.qty!,
+      prodVariantId: selectedVariant?.id!,
       cartId: cartItems[0].cartId,
     };
     addToCart(newItem);
@@ -45,7 +46,7 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
   async function removeFromCartHandler() {
     removeFromCart(selectedVariant?.id!);
     // what if there wasnt a cart item
-    await removeCartItemDb("", selectedVariant?.id!, cartItems[0].cartId);
+    await removeCartItemDb(selectedVariant?.id!, cartItems[0].cartId);
   }
   return (
     <div className="flex flex-col gap-2">

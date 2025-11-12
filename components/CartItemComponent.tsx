@@ -22,16 +22,16 @@ const CartItemComponent = ({
 }) => {
   async function handleIncrease() {
     increaseItemQuantity(item.id);
-    await increaseItemQuantityDb(item.id);
+    await increaseItemQuantityDb(item.id, item.cartId);
   }
   async function handleDecrease() {
     decreaseItemQuantity(item.id);
-    await decreaseItemQuantityDb(item.id);
+    await decreaseItemQuantityDb(item.id, item.cartId);
   }
   async function handleRemove() {
     removeFromCart(item.id);
     //if id does not exist remove all items with  variant id and cart id
-    await removeCartItemDb(item.id, item.id, item.cartId);
+    await removeCartItemDb(item.prodVariantId, item.cartId);
   }
   return (
     <div className="flex gap-2">

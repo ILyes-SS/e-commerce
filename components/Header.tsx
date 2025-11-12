@@ -15,7 +15,7 @@ import {
 import { LogoutButton } from "./logout-button";
 import Cart from "./Cart";
 import { getCartWithItems } from "@/actions/cart";
-import { CartItem, CartItemServer, CartWithItems } from "@/types";
+import { CartItem, CartWithItems } from "@/types";
 import NavBar from "./NavBar";
 
 const Header = async () => {
@@ -33,6 +33,7 @@ const Header = async () => {
       size: item.productVariant.size,
       color: item.productVariant.color,
       stockQty: item.productVariant.stock.qty,
+      prodVariantId: item.productVariant.id,
       cartId: item.cartId,
     })) || [];
   return (

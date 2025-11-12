@@ -72,11 +72,15 @@ export async function clearCartDb(cartId: string | undefined) {
     console.log(error);
   }
 }
-export async function decreaseItemQuantityDb(cartItemId: string) {
+export async function decreaseItemQuantityDb(
+  variantId: string,
+  cartId: string
+) {
   try {
-    let item = await prisma.cartItem.update({
+    let item = await prisma.cartItem.updateManyAndReturn({
       where: {
-        id: cartItemId,
+        prodVariantId: variantId,
+        cartId,
       },
       data: {
         quantity: {
@@ -84,18 +88,22 @@ export async function decreaseItemQuantityDb(cartItemId: string) {
         },
       },
     });
-    if (item.quantity <= 0) {
-      await removeCartItemDb(item.id, item.id, item.cartId);
+    if (item[0].quantity <= 0) {
+      await removeCartItemDb(item[0].prodVariantId, item[0].cartId);
     }
   } catch (error) {
     console.log(error);
   }
 }
-export async function increaseItemQuantityDb(cartItemId: string) {
+export async function increaseItemQuantityDb(
+  variantId: string,
+  cartId: string
+) {
   try {
-    await prisma.cartItem.update({
+    await prisma.cartItem.updateMany({
       where: {
-        id: cartItemId,
+        prodVariantId: variantId,
+        cartId: cartId,
       },
       data: {
         quantity: {
@@ -108,23 +116,12 @@ export async function increaseItemQuantityDb(cartItemId: string) {
   }
 }
 //each cart item has one unique
-export async function removeCartItemDb(
-  cartItemId: string,
-  variantId: string,
-  cartId: string
-) {
+export async function removeCartItemDb(variantId: string, cartId: string) {
   try {
     await prisma.cartItem.deleteMany({
       where: {
-        OR: [
-          {
-            id: cartItemId,
-          },
-          {
-            prodVariantId: variantId,
-            cartId,
-          },
-        ],
+        prodVariantId: variantId,
+        cartId,
       },
     });
   } catch (error) {

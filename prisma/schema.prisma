@@ -135,6 +135,7 @@ model CartItem {
   cartId   String
   productVariant ProductVariant @relation(fields: [prodVariantId], references: [id])
   prodVariantId  String
+  @@unique([cartId, prodVariantId])
 }
 
 // --- Orders (Permanent) ---
