@@ -65,10 +65,12 @@ const Cart = ({ initialCartItems }: { initialCartItems?: CartItem[] }) => {
             <div className="flex justify-between text-xl font-semibold">
               <p>Total:</p>
               <p>
-                {cartItems.reduce(
-                  (total, item) => total + item.price * item.quantity,
-                  0
-                )}
+                {cartItems
+                  .reduce(
+                    (total, item) => total + item.price * item.quantity,
+                    0
+                  )
+                  .toFixed(0) + " DA"}
               </p>
             </div>
           ) : null}

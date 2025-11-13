@@ -4,22 +4,37 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/store/useCart";
 import { ProductVariantsImagesStock } from "@/types";
-import { addToCartDb, removeCartItemDb, removeFromCart } from "@/actions/cart";
+import { addToCartDb, removeCartItemDb } from "@/actions/cart";
+import { ProductVariant } from "@/app/generated/prisma";
 
 const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const { addToCart, cartItems, removeFromCart } = useCart();
+
+  //initial color and size to the first variant
   useEffect(() => {
     setSelectedColor(product.variants[0].color);
     setSelectedSize(product.variants[0].size);
   }, []);
+  // when user select another color a size is selected automatically
+  useEffect(() => {
+    setSelectedSize(colorsSizesMap[selectedColor || ""]?.[0]);
+  }, [selectedColor]);
   const selectedVariant = product.variants.find(
     (variant) =>
       variant.color === selectedColor && variant.size === selectedSize
   );
-  const colors = product?.variants.map((variant) => variant.color);
-  const sizes = product?.variants.map((variant) => variant.size);
+  const colorsSizesMap = product.variants.reduce(
+    (acc, variant: ProductVariant) => {
+      if (!acc[variant.color]) {
+        acc[variant.color] = [];
+      }
+      acc[variant.color].push(variant.size);
+      return acc;
+    },
+    {} as Record<string, string[]>
+  );
   const variantInCart = cartItems.find(
     (item) =>
       item.id === selectedVariant?.id &&
@@ -53,7 +68,7 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
       <h1 className="text-2xl font-semibold">{product?.name}</h1>
       <h2>Colors</h2>
       <div className="flex gap-3">
-        {colors?.map((color) => (
+        {Object.keys(colorsSizesMap)?.map((color) => (
           <div
             key={color}
             style={{ backgroundColor: color || "" }}
@@ -67,7 +82,7 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
       </div>
       <h2>Size</h2>
       <div className="flex gap-3">
-        {sizes?.map((size) => (
+        {colorsSizesMap[selectedColor || ""]?.map((size) => (
           <span
             key={size}
             className={
@@ -81,12 +96,16 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
         ))}
       </div>
       <p className="text-3xl text-bg-red-500 font-bold">
-        {selectedVariant?.price || "Not Available"}DA
+        {selectedVariant?.price + "DA"}
       </p>
       {selectedVariant?.stock?.qty! < 1 ? (
         <p className="text-red-500">Out of Stock</p>
       ) : null}
       <Button
+        disabled={
+          selectedVariant?.price === undefined ||
+          selectedVariant?.stock?.qty! < 1
+        }
         className="cursor-pointer"
         onClick={variantInCart ? removeFromCartHandler : addToCartHandler}
       >
