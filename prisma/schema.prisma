@@ -99,6 +99,8 @@ model Stock {
 model Category {
   id    String @id @default(uuid())
   title String
+  slug String? @unique
+  image String?
   // Self-relation for subcategories
   parentCategory Category?   @relation("Subcategories", fields: [parentCategoryId], references: [id])
   parentCategoryId  String?

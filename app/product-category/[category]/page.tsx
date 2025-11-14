@@ -8,7 +8,7 @@ const page = async ({ params }: { params: Promise<{ category: string }> }) => {
   const products = await prisma.product.findMany({
     where: {
       category: {
-        title: category.replaceAll("%20", " "),
+        slug: category,
       },
     },
     include: {

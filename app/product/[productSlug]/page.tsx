@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import ProductCarousel from "@/components/ProductCarousel";
 import ProductInfos from "@/components/ProductInfos";
+import SimilarProducts from "@/components/SimilarProducts";
 
 const page = async ({
   params,
@@ -30,14 +31,20 @@ const page = async ({
   });
 
   return (
-    <div className="flex gap-10">
-      <div>
-        <ProductCarousel
-          images={product?.images || []}
-          mainImage={product?.image || ""}
-        />
+    <div className="flex flex-col gap-10">
+      <div className="flex gap-10">
+        <div>
+          <ProductCarousel
+            images={product?.images || []}
+            mainImage={product?.image || ""}
+          />
+        </div>
+        <ProductInfos product={product!} />
       </div>
-      <ProductInfos product={product!} />
+      <SimilarProducts
+        productId={product?.id || ""}
+        categoryId={product?.categoryId || ""}
+      />
     </div>
   );
 };
