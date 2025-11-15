@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { CartItem } from "@/types";
 import Image from "next/image";
@@ -22,56 +24,69 @@ const CartItemComponent = ({
 }) => {
   async function handleIncrease() {
     increaseItemQuantity(item.id);
-    await increaseItemQuantityDb(item.id, item.cartId);
+    await increaseItemQuantityDb(item.prodVariantId, item.cartId);
   }
   async function handleDecrease() {
     decreaseItemQuantity(item.id);
-    await decreaseItemQuantityDb(item.id, item.cartId);
+    await decreaseItemQuantityDb(item.prodVariantId, item.cartId);
   }
   async function handleRemove() {
     removeFromCart(item.id);
-    //if id does not exist remove all items with  variant id and cart id
     await removeCartItemDb(item.prodVariantId, item.cartId);
   }
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-4 items-center border-b pb-4">
       <Image
-        src={"/placeholder.png"}
+        src={item.image || "/placeholder.png"}
         alt={item.title}
-        width={100}
-        height={100}
+        width={80}
+        height={80}
+        className="rounded-md"
       />
-      <div className="flex flex-col gap-2">
-        <p className="text-lg">{item.title}</p>
-        <div
-          className="rounded-full w-4 h-4 p-1 border-2 border-black"
-          style={{ backgroundColor: item.color || "black" }}
-        ></div>
-        <div>
-          <div className="flex gap-2">
+      <div className="flex-1 flex flex-col gap-2">
+        <p className="text-lg font-medium">{item.title}</p>
+        {item.color && (
+          <div className="flex items-center gap-2">
+            <div
+              className="rounded-full w-4 h-4 border-2 border-gray-300"
+              style={{ backgroundColor: item.color }}
+            ></div>
+            <span className="text-sm text-gray-600">{item.color}</span>
+          </div>
+        )}
+        {item.size && (
+          <span className="text-sm text-gray-600">Size: {item.size}</span>
+        )}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <Button
-              className="w-5 rounded-full cursor-pointer h-5 p-1"
+              className="w-8 h-8 rounded-full p-0"
+              variant="outline"
               onClick={handleDecrease}
+              disabled={item.quantity <= 1}
             >
               -
             </Button>
-            <p>{item.quantity}</p>
+            <span className="w-8 text-center">{item.quantity}</span>
             <Button
-              className="w-5 rounded-full cursor-pointer h-5 p-1"
+              className="w-8 h-8 rounded-full p-0"
+              variant="outline"
               onClick={handleIncrease}
+              disabled={item.quantity >= item.stockQty}
             >
               +
             </Button>
           </div>
-          <p>{item.price * item.quantity}</p>
+          <p className="font-semibold">{item.price * item.quantity} DA</p>
         </div>
       </div>
       <Button
-        className="cursor-pointer"
-        variant={"ghost"}
+        variant="ghost"
+        size="icon"
         onClick={handleRemove}
+        className="text-red-500 hover:text-red-700"
       >
-        <Trash2Icon />
+        <Trash2Icon className="h-5 w-5" />
       </Button>
     </div>
   );
