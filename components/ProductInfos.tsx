@@ -10,7 +10,7 @@ import { ProductVariant } from "@/app/generated/prisma";
 const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const { addToCart, cartItems, removeFromCart } = useCart();
+  const { addToCart, cartItems, cartId, removeFromCart } = useCart();
 
   //initial color and size to the first variant
   useEffect(() => {
@@ -36,10 +36,7 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
     {} as Record<string, string[]>
   );
   const variantInCart = cartItems.find(
-    (item) =>
-      item.id === selectedVariant?.id &&
-      item.color === selectedColor &&
-      item.size === selectedSize
+    (item) => item.color === selectedColor && item.size === selectedSize
   );
 
   async function addToCartHandler() {
@@ -53,15 +50,15 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
       quantity: 1,
       stockQty: selectedVariant?.stock?.qty!,
       prodVariantId: selectedVariant?.id!,
-      cartId: cartItems[0].cartId,
+      cartId: cartId!,
     };
     addToCart(newItem);
-    await addToCartDb(cartItems[0].cartId, newItem);
+    await addToCartDb(cartId!, newItem);
   }
   async function removeFromCartHandler() {
     removeFromCart(selectedVariant?.id!);
     // what if there wasnt a cart item
-    await removeCartItemDb(selectedVariant?.id!, cartItems[0].cartId);
+    await removeCartItemDb(selectedVariant?.id!, cartId!);
   }
   return (
     <div className="flex flex-col gap-2">

@@ -17,16 +17,24 @@ import { Button } from "./ui/button";
 import { clearCartDb } from "@/actions/cart";
 import CartItemComponent from "./CartItemComponent";
 
-const Cart = ({ initialCartItems }: { initialCartItems?: CartItem[] }) => {
+const Cart = ({
+  initialCartItems,
+  initialCartId,
+}: {
+  initialCartItems?: CartItem[];
+  initialCartId?: string;
+}) => {
   const {
     cartItems,
     setCartItems,
+    setCartId,
     increaseItemQuantity,
     decreaseItemQuantity,
     removeFromCart,
   } = useCart();
 
   useEffect(() => {
+    setCartId(initialCartId!);
     if (initialCartItems) {
       setCartItems(initialCartItems);
     }
@@ -34,8 +42,7 @@ const Cart = ({ initialCartItems }: { initialCartItems?: CartItem[] }) => {
 
   async function handleClearCart() {
     if (cartItems.length <= 0) return;
-    if (!cartItems[0].cartId) return;
-    await clearCartDb(cartItems[0].cartId);
+    await clearCartDb(initialCartId!);
     setCartItems([]);
   }
   return (

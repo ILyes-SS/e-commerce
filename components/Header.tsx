@@ -79,7 +79,7 @@ const Header = async () => {
               <Button>Login</Button>
             </Link>
           )}
-          <Cart initialCartItems={cartItems} />
+          <Cart initialCartItems={cartItems} initialCartId={cart?.id} />
         </div>
       </div>
       <NavBar />

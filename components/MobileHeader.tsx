@@ -109,7 +109,7 @@ const MobileHeader = async () => {
               <Button size="sm">Login</Button>
             </Link>
           )}
-          <Cart initialCartItems={cartItems} />
+          <Cart initialCartItems={cartItems} initialCartId={cart?.id} />
         </div>
       </div>
     </header>

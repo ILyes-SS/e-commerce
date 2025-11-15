@@ -56,11 +56,13 @@ export type ProductVariantsImagesStock = Product & {
 };
 
 export type CartStore = {
+  cartId: string | null;
   cartItems: CartItem[];
   addToCart: (product: CartItem) => void;
   removeFromCart: (productId: string) => void;
   getCartTotal: () => (state: any) => any;
   setCartItems: (cartItems: CartItem[]) => void;
+  setCartId: (cartId: string | null) => void;
   increaseItemQuantity: (productId: string) => void;
   decreaseItemQuantity: (productId: string) => void;
 };
