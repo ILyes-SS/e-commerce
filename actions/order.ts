@@ -25,7 +25,7 @@ export async function createOrder(orderData: CreateOrderData) {
         name: orderData.name,
         email: orderData.email,
         phone: orderData.phone,
-        total: orderData.total,
+        total: Math.round(orderData.total),
         status: "PENDING",
         wilayaId: orderData.wilayaId,
         customerId: orderData.customerId || null,
