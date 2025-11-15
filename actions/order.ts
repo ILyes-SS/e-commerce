@@ -78,3 +78,43 @@ export async function getWilayas() {
     throw error;
   }
 }
+
+export async function getUserOrders(
+  userId: string | undefined,
+  userEmail: string | undefined
+) {
+  try {
+    if (!userId && !userEmail) {
+      return [];
+    }
+
+    const orders = await prisma.order.findMany({
+      where: {
+        OR: [
+          ...(userId ? [{ customerId: userId }] : []),
+          ...(userEmail ? [{ email: userEmail }] : []),
+        ],
+      },
+      include: {
+        items: {
+          include: {
+            productVariant: {
+              include: {
+                product: true,
+              },
+            },
+          },
+        },
+        wilaya: true,
+      },
+      orderBy: {
+        id: "desc", // Order by ID descending (newest first)
+      },
+    });
+
+    return orders;
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    throw error;
+  }
+}
