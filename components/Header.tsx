@@ -1,7 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { Input } from "./ui/input";
-import { Search, HistoryIcon, DoorOpen } from "lucide-react";
+import { HistoryIcon, DoorOpen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getUser } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -17,6 +16,7 @@ import Cart from "./Cart";
 import { getCartWithItems } from "@/actions/cart";
 import { CartItem, CartWithItems } from "@/types";
 import NavBar from "./NavBar";
+import SearchInput from "./SearchInput";
 
 const Header = async () => {
   const user = await getUser();
@@ -39,17 +39,16 @@ const Header = async () => {
   return (
     <header className="">
       <div className="flex px-3 py-1 h-16 justify-around items-center">
-        <Image
-          src="/logo.png"
-          alt="Logo"
-          className="h-12 w-12"
-          width={100}
-          height={100}
-        />
-        <div className="flex items-center flex-1 justify-center relative gap-2">
-          <Input className="w-1/2" placeholder="Search" />
-          <Search className="absolute  right-2 top-1/2 -translate-y-1/2" />
-        </div>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            className="h-12 w-12"
+            width={100}
+            height={100}
+          />
+        </Link>
+        <SearchInput />
         <div className="flex gap-2 items-center">
           {user ? (
             <DropdownMenu>

@@ -28,7 +28,9 @@ function SubNavigation({ items }: any) {
         <NavigationMenuItem key={item.id}>
           {item.subcategories?.length > 0 ? (
             <>
-              <NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
+              <NavigationMenuTrigger>
+                <Link href={`/category/${item.slug}`}>{item.title}</Link>
+              </NavigationMenuTrigger>
               <NavigationMenuContent>
                 {item.subcategories?.map((subcategory: Category) => (
                   <NavigationMenuLink key={subcategory.id} asChild>
