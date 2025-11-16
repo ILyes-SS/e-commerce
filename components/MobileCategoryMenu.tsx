@@ -69,6 +69,8 @@ const MobileCategoryMenu = ({ categories }) => {
           )}
         </div>
       ))}
+      <Link href="/about-us">About Us</Link>
+      <Link href="/contact-us">Contact Us</Link>
     </nav>
   );
 };

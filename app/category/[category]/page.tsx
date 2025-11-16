@@ -1,4 +1,3 @@
-import { DisplayPath } from "@/components/DisplayPath";
 import ProductsDisplay from "@/components/ProductsDisplay";
 import prisma from "@/lib/prisma";
 import React from "react";
@@ -16,12 +15,7 @@ const page = async ({ params }: { params: Promise<{ category: string }> }) => {
     },
   });
 
-  return (
-    <div>
-      <DisplayPath />
-      <ProductsDisplay products={products} />
-    </div>
-  );
+  return <ProductsDisplay products={products} />;
 };
 
 export default page;

@@ -18,6 +18,8 @@ const NavBar = async () => {
           <SubNavigation items={[category]} />
         </NavigationMenu>
       ))}
+      <Link href="/about-us">About Us</Link>
+      <Link href="/contact-us">Contact Us</Link>
     </nav>
   );
 };
