@@ -1,6 +1,7 @@
 import { Product, ProductVariant } from "@/app/generated/prisma";
 import ProductCard from "./ProductCard";
 import PriceFilter from "./PriceFilter";
+import SortProducts from "./SortProducts";
 
 const ProductsDisplay = ({
   products,
@@ -10,6 +11,7 @@ const ProductsDisplay = ({
   return (
     <div>
       <PriceFilter />
+      <SortProducts />
       <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />

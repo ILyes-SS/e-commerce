@@ -4,11 +4,16 @@ import prisma from "@/lib/prisma";
 const SearchPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; min?: string; max?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    min?: string;
+    max?: string;
+    sort?: string;
+  }>;
 }) => {
   const { q } = await searchParams;
   const query = q?.trim() || "";
-  const { min, max } = await searchParams;
+  const { min, max, sort } = await searchParams;
   const minPrice = min ? parseFloat(min) : undefined;
   const maxPrice = max ? parseFloat(max) : undefined;
   const products = query
@@ -37,14 +42,22 @@ const SearchPage = async ({
       })
     : [];
 
+  const sortedProducts = products.sort((a, b) => {
+    if (sort === "asc" || sort == undefined) {
+      return a.variants[0].price - b.variants[0].price;
+    } else {
+      return b.variants[0].price - a.variants[0].price;
+    }
+  });
+
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">
         {query ? `Search results for "${query}"` : "Search Products"}
       </h1>
       {query ? (
-        products.length > 0 ? (
-          <ProductsDisplay products={products} />
+        sortedProducts.length > 0 ? (
+          <ProductsDisplay products={sortedProducts} />
         ) : (
           <p className="text-gray-500">
             No products found matching your search.
