@@ -1,15 +1,16 @@
 import ProductsDisplay from "@/components/ProductsDisplay";
 import prisma from "@/lib/prisma";
-import React from "react";
 
 const SearchPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; min?: string; max?: string }>;
 }) => {
   const { q } = await searchParams;
   const query = q?.trim() || "";
-
+  const { min, max } = await searchParams;
+  const minPrice = min ? parseFloat(min) : undefined;
+  const maxPrice = max ? parseFloat(max) : undefined;
   const products = query
     ? await prisma.product.findMany({
         where: {
@@ -17,9 +18,21 @@ const SearchPage = async ({
             contains: query,
             mode: "insensitive",
           },
+          variants: {
+            some: {
+              price: {
+                gte: minPrice,
+                lte: maxPrice,
+              },
+            },
+          },
         },
         include: {
-          variants: true,
+          variants: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
         },
       })
     : [];
@@ -33,7 +46,9 @@ const SearchPage = async ({
         products.length > 0 ? (
           <ProductsDisplay products={products} />
         ) : (
-          <p className="text-gray-500">No products found matching your search.</p>
+          <p className="text-gray-500">
+            No products found matching your search.
+          </p>
         )
       ) : (
         <p className="text-gray-500">Enter a search query to find products.</p>
@@ -43,4 +58,3 @@ const SearchPage = async ({
 };
 
 export default SearchPage;
-
