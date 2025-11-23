@@ -6,19 +6,32 @@ const page = async ({
   searchParams,
 }: {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ min?: string; max?: string; sort: string }>;
+  searchParams: Promise<{
+    min?: string;
+    max?: string;
+    sort: string;
+    brands?: string[] | string;
+  }>;
 }) => {
   const { category } = await params;
-  const { min, max, sort } = await searchParams;
+  const { min, max, sort, brands } = await searchParams;
   const minPrice = min ? parseFloat(min) : undefined;
   const maxPrice = max ? parseFloat(max) : undefined;
 
-  // Fetch products in the category, include only variants in the price range
   const products = await prisma.product.findMany({
     where: {
       category: {
         slug: category,
       },
+      ...(brands
+        ? {
+            brand: {
+              title: {
+                in: Array.isArray(brands) ? brands : [brands],
+              },
+            },
+          }
+        : {}),
       variants: {
         some: {
           price: {

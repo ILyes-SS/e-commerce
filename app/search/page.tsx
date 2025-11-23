@@ -9,11 +9,12 @@ const SearchPage = async ({
     min?: string;
     max?: string;
     sort?: string;
+    brands?: string[] | string;
   }>;
 }) => {
   const { q } = await searchParams;
   const query = q?.trim() || "";
-  const { min, max, sort } = await searchParams;
+  const { min, max, sort, brands } = await searchParams;
   const minPrice = min ? parseFloat(min) : undefined;
   const maxPrice = max ? parseFloat(max) : undefined;
   const products = query
@@ -31,6 +32,15 @@ const SearchPage = async ({
               },
             },
           },
+          ...(brands
+            ? {
+                brand: {
+                  title: {
+                    in: Array.isArray(brands) ? brands : [brands],
+                  },
+                },
+              }
+            : {}),
         },
         include: {
           variants: {

@@ -5,7 +5,10 @@ import { CartItem, CartWithItems } from "@/types";
 
 export async function getCartWithItems(
   userId: string | undefined
-): Promise<CartWithItems> {
+): Promise<CartWithItems | null> {
+  if (!userId) {
+    return null;
+  }
   try {
     const cart = await prisma.cart.upsert({
       where: { userId },
