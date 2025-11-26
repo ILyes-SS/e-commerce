@@ -12,7 +12,7 @@ import { Category } from "@/app/generated/prisma";
 const NavBar = async () => {
   const categories = await getCategories();
   return (
-    <nav className="flex gap-2 px-4 py-3 text-sm">
+    <nav className="flex items-center gap-2 px-4 py-3 text-sm">
       {categories?.map((category) => (
         <NavigationMenu key={category.id}>
           <SubNavigation items={[category]} />

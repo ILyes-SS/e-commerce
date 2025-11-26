@@ -11,7 +11,7 @@ export default async function Home() {
     },
   });
   return (
-    <div className="text-3xl">
+    <div className="flex flex-col gap-5 bg-gray-100 py-3">
       <section className="container mx-auto">
         <HomeCarousel slides={slides} />
       </section>

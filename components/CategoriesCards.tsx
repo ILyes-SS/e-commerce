@@ -10,11 +10,13 @@ const CategoriesCards = async () => {
   });
   return (
     <div className="flex flex-col gap-3">
-      <h1 className="text-2xl font-bold text-center">Our Categories</h1>
+      <h1 className="text-3xl font-heading font-bold text-center">
+        Our Categories
+      </h1>
       <div className="flex justify-center flex-wrap gap-2 max-w-[700px] mx-auto">
         {categories.map((category) => (
           <Link
-            className="bg-white/90 flex flex-col items-center justify-center border p-7 text-lg hover:text-blue-500  border-gray-200 hover:border-gray-400 transition-all duration-300 rounded-md cursor-pointer"
+            className="bg-white/90 flex flex-col-reverse items-center justify-center border p-7 text-lg   border-gray-200 hover:border-gray-400 transition-all duration-300 rounded-md cursor-pointer"
             key={category.id}
             href={`/category/${category.slug}`}
           >

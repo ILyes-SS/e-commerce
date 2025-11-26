@@ -19,13 +19,13 @@ const HomeCarousel = ({ slides }: { slides: CarouselSlide[] }) => {
     >
       {slides?.map((slide) => (
         <SwiperSlide key={slide.id}>
-          <div className="flex flex-col h-[400px] items-center justify-center relative">
+          <div className="flex max-w-[1000px] mx-auto flex-col h-[500px] max-[600px]:h-[300px] items-center justify-center relative">
             <div className="absolute z-1 py-2 pl-2 top-0 bg-black/70 w-full">
               <h1 className="text-lg text-white"> {slide.title} </h1>
             </div>
             <div className="flex flex-col items-center justify-center">
               <Button
-                className="absolute z-2 bottom-4 rounded-none bg-white/90"
+                className="absolute z-2 bottom-4 rounded-none bg-white/90 hover:bg-white/70"
                 variant={"secondary"}
                 asChild
               >

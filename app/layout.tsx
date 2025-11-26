@@ -3,6 +3,19 @@ import "./globals.css";
 import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
 import Footer from "@/components/Footer";
+import { Nunito, Quicksand } from "next/font/google";
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  variable: "--font-nunito",
+  display: "swap",
+});
+
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  variable: "--font-quicksand",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`antialiased flex flex-col min-h-screen`}>
+    <html lang="en" className={`${nunito.variable} ${quicksand.variable}`}>
+      <body className="antialiased flex flex-col min-h-screen font-sans">
         <Header />
         <MobileHeader />
         <main className="flex-1">{children}</main>
