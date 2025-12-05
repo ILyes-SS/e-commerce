@@ -18,7 +18,7 @@ export const useCart = create<CartStore>((set) => ({
   setCartItems: (cartItems: CartItem[]) =>
     set((state) => ({
       cartItems,
-      cartId: state.cartId || cartItems[0].cartId,
+      cartId: state.cartId || cartItems[0]?.cartId,
     })),
   setCartId: (cartId: string | null) =>
     set((state) => ({ cartId, cartItems: state.cartItems })),

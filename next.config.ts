@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 
+const dns = require("dns");
+
+// ⚠️ Force IPv4 - this fixes many 'fetch failed' errors in Node 18+
+dns.setDefaultResultOrder("ipv4first");
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [

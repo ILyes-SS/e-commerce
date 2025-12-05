@@ -25,7 +25,7 @@ const SimilarProducts = async ({
   });
   return (
     <div>
-      <h2>Similar Products</h2>
+      <h2 className="text-2xl font-semibold">Similar Products</h2>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
         {similarProducts.length >= 1 ? (
           similarProducts.map((product) => (

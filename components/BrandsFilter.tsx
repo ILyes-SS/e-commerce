@@ -22,7 +22,7 @@ const BrandsFilter = ({ brandsList }: { brandsList: Brand[] }) => {
   return (
     <div>
       {brandsList.map((brand) => (
-        <div key={brand.id}>
+        <div className="flex gap-2" key={brand.id}>
           <input
             type="checkbox"
             value={brand.title}

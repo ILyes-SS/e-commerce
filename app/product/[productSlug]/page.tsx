@@ -31,7 +31,7 @@ const page = async ({
   });
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex py-10 px-6 items-center flex-col gap-10">
       <div className="flex gap-10">
         <div>
           <ProductCarousel
@@ -41,10 +41,12 @@ const page = async ({
         </div>
         <ProductInfos product={product!} />
       </div>
-      <SimilarProducts
-        productId={product?.id || ""}
-        categoryId={product?.categoryId || ""}
-      />
+      <div className="self-start">
+        <SimilarProducts
+          productId={product?.id || ""}
+          categoryId={product?.categoryId || ""}
+        />
+      </div>
     </div>
   );
 };

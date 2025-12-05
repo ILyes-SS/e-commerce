@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { HistoryIcon, DoorOpen } from "lucide-react";
+import { HistoryIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getUser } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -65,12 +65,15 @@ const Header = async () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem>
-                  <Link href="/auth/history">
+                  <Link
+                    href="/auth/history"
+                    className="flex items-center gap-1"
+                  >
                     <HistoryIcon className="mr-2 h-4 w-4" /> History
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <DoorOpen className="mr-2 h-4 w-4" /> <LogoutButton />
+                  <LogoutButton />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

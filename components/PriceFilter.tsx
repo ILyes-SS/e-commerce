@@ -20,7 +20,7 @@ const PriceFilter = () => {
   }
 
   return (
-    <div className="w-[60%] space-y-3">
+    <div className="w-[400px] max-w-full space-y-3">
       <Slider value={value} onValueChange={setValue} max={10000} step={1} />
       <div className="flex justify-between text-sm text-muted-foreground">
         <span>

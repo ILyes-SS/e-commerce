@@ -19,7 +19,9 @@ const NavBar = async () => {
         </NavigationMenu>
       ))}
       <Link href="/about-us">About Us</Link>
-      <Link href="/contact-us">Contact Us</Link>
+      <Link className="ml-2" href="/contact-us">
+        Contact Us
+      </Link>
     </nav>
   );
 };
