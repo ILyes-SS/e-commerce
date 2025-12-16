@@ -42,6 +42,12 @@ export async function addToCartDb(
   cartItem: CartItem
 ) {
   try {
+    if (!cartId) {
+      throw new Error("Cart ID is required");
+    }
+    if (!cartItem.id) {
+      throw new Error("Product variant ID is required");
+    }
     const item = await prisma.cartItem.create({
       data: {
         quantity: cartItem.quantity,
@@ -57,8 +63,10 @@ export async function addToCartDb(
         },
       },
     });
+    return { success: true, item };
   } catch (error) {
     console.log(error);
+    return { success: false, error: error };
   }
 }
 
@@ -66,6 +74,9 @@ export async function removeFromCart() {}
 
 export async function clearCartDb(cartId: string | undefined) {
   try {
+    if (!cartId) {
+      throw new Error("Cart ID is required");
+    }
     await prisma.cartItem.deleteMany({
       where: {
         cartId,
@@ -73,6 +84,7 @@ export async function clearCartDb(cartId: string | undefined) {
     });
   } catch (error) {
     console.log(error);
+    return { success: false, error: error };
   }
 }
 export async function decreaseItemQuantityDb(
@@ -80,6 +92,12 @@ export async function decreaseItemQuantityDb(
   cartId: string
 ) {
   try {
+    if (!variantId) {
+      throw new Error("Product variant ID is required");
+    }
+    if (!cartId) {
+      throw new Error("Cart ID is required");
+    }
     let item = await prisma.cartItem.updateManyAndReturn({
       where: {
         prodVariantId: variantId,
@@ -103,6 +121,12 @@ export async function increaseItemQuantityDb(
   cartId: string
 ) {
   try {
+    if (!variantId) {
+      throw new Error("Product variant ID is required");
+    }
+    if (!cartId) {
+      throw new Error("Cart ID is required");
+    }
     await prisma.cartItem.updateMany({
       where: {
         prodVariantId: variantId,
