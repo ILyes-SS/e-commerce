@@ -13,7 +13,7 @@ export const useCart = create<CartStore>((set) => ({
   removeFromCart: (productId: string) =>
     set((state) => ({
       cartItems: state.cartItems.filter((item) => item.id !== productId),
-      cartId: state.cartId || state.cartItems[0].cartId,
+      cartId: state.cartId || state.cartItems[0]?.cartId,
     })),
   setCartItems: (cartItems: CartItem[]) =>
     set((state) => ({
@@ -34,7 +34,7 @@ export const useCart = create<CartStore>((set) => ({
       cartItems: state.cartItems.map((item) =>
         item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
       ),
-      cartId: state.cartId || state.cartItems[0].cartId,
+      cartId: state.cartId || state.cartItems[0]?.cartId,
     })),
   decreaseItemQuantity: (productId: string) =>
     set((state) => ({
@@ -45,6 +45,6 @@ export const useCart = create<CartStore>((set) => ({
             : item
         )
         .filter((item) => item.quantity > 0),
-      cartId: state.cartId || state.cartItems[0].cartId,
+      cartId: state.cartId || state.cartItems[0]?.cartId,
     })),
 }));
