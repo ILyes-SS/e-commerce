@@ -3,6 +3,7 @@ import ProductCarousel from "@/components/ProductCarousel";
 import ProductInfos from "@/components/ProductInfos";
 import SimilarProducts from "@/components/SimilarProducts";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 const page = async ({
   params,
@@ -39,18 +40,24 @@ const page = async ({
     <div className="flex py-10 px-6 items-center flex-col gap-10">
       <div className="flex gap-10">
         <div>
-          <ProductCarousel
-            images={product?.images || []}
-            mainImage={product?.image || ""}
-          />
+          <Suspense fallback={<div>Loading images...</div>}>
+            <ProductCarousel
+              images={product?.images || []}
+              mainImage={product?.image || ""}
+            />
+          </Suspense>
         </div>
-        <ProductInfos product={product!} />
+        <Suspense fallback={<div>Loading product details...</div>}>
+          <ProductInfos product={product!} />
+        </Suspense>
       </div>
       <div className="self-start">
-        <SimilarProducts
-          productId={product?.id || ""}
-          categoryId={product?.categoryId || ""}
-        />
+        <Suspense fallback={<div>Loading similar products...</div>}>
+          <SimilarProducts
+            productId={product?.id || ""}
+            categoryId={product?.categoryId || ""}
+          />
+        </Suspense>
       </div>
     </div>
   );

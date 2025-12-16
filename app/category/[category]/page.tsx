@@ -1,5 +1,6 @@
 import ProductsDisplay from "@/components/ProductsDisplay";
 import prisma from "@/lib/prisma";
+import { Suspense } from "react";
 
 const page = async ({
   params,
@@ -57,7 +58,11 @@ const page = async ({
       return sort === "desc" ? priceB - priceA : priceA - priceB;
     });
 
-  return <ProductsDisplay products={sortedProducts} />;
+  return (
+    <Suspense fallback={<div>Loading category products...</div>}>
+      <ProductsDisplay products={sortedProducts} />
+    </Suspense>
+  );
 };
 
 export default page;

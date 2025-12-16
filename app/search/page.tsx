@@ -1,5 +1,6 @@
 import ProductsDisplay from "@/components/ProductsDisplay";
 import prisma from "@/lib/prisma";
+import { Suspense } from "react";
 
 const SearchPage = async ({
   searchParams,
@@ -67,7 +68,9 @@ const SearchPage = async ({
       </h1>
       {query ? (
         sortedProducts.length > 0 ? (
-          <ProductsDisplay products={sortedProducts} />
+          <Suspense fallback={<div>Loading products...</div>}>
+            <ProductsDisplay products={sortedProducts} />
+          </Suspense>
         ) : (
           <p className="text-gray-500">
             No products found matching your search.

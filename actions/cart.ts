@@ -82,6 +82,7 @@ export async function clearCartDb(cartId: string | undefined) {
         cartId,
       },
     });
+    return { success: true };
   } catch (error) {
     console.log(error);
     return { success: false, error: error };
@@ -112,8 +113,10 @@ export async function decreaseItemQuantityDb(
     if (item[0].quantity <= 0) {
       await removeCartItemDb(item[0].prodVariantId, item[0].cartId);
     }
+    return { success: true, item };
   } catch (error) {
     console.log(error);
+    return { success: false, error: error };
   }
 }
 export async function increaseItemQuantityDb(
@@ -138,8 +141,10 @@ export async function increaseItemQuantityDb(
         },
       },
     });
+    return { success: true };
   } catch (error) {
     console.log(error);
+    return { success: false, error: error };
   }
 }
 //each cart item has one unique
@@ -151,7 +156,9 @@ export async function removeCartItemDb(variantId: string, cartId: string) {
         cartId,
       },
     });
+    return { success: true };
   } catch (error) {
     console.log(error);
+    return { success: false, error: error };
   }
 }
