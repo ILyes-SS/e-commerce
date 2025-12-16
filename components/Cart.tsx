@@ -34,11 +34,11 @@ const Cart = ({
   } = useCart();
 
   useEffect(() => {
-    setCartId(initialCartId!);
-    if (initialCartItems) {
-      setCartItems(initialCartItems);
+    if (initialCartId) {
+      setCartId(initialCartId);
+      setCartItems(initialCartItems || []);
     }
-  }, []);
+  }, [initialCartItems, initialCartId, setCartId, setCartItems]);
 
   async function handleClearCart() {
     if (cartItems.length <= 0) return;

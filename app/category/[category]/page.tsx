@@ -49,13 +49,13 @@ const page = async ({
       },
     },
   });
-  const sortedProducts = products.sort((a, b) => {
-    if (sort === "asc" || sort == undefined) {
-      return a.variants[0].price - b.variants[0].price;
-    } else {
-      return b.variants[0].price - a.variants[0].price;
-    }
-  });
+  const sortedProducts = products
+    .filter((p) => p.variants.length > 0)
+    .sort((a, b) => {
+      const priceA = a.variants[0]?.price ?? 0;
+      const priceB = b.variants[0]?.price ?? 0;
+      return sort === "desc" ? priceB - priceA : priceA - priceB;
+    });
 
   return <ProductsDisplay products={sortedProducts} />;
 };
