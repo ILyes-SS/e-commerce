@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import ProductCarousel from "@/components/ProductCarousel";
 import ProductInfos from "@/components/ProductInfos";
 import SimilarProducts from "@/components/SimilarProducts";
+import { notFound } from "next/navigation";
 
 const page = async ({
   params,
@@ -29,6 +30,10 @@ const page = async ({
       },
     },
   });
+
+  if (!product) {
+    notFound();
+  }
 
   return (
     <div className="flex py-10 px-6 items-center flex-col gap-10">
