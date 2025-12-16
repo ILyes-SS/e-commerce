@@ -19,43 +19,63 @@ export interface CreateOrderData {
 
 export async function createOrder(orderData: CreateOrderData) {
   try {
-    // Create the order
-    const order = await prisma.order.create({
-      data: {
-        name: orderData.name,
-        email: orderData.email,
-        phone: orderData.phone,
-        total: Math.round(orderData.total),
-        status: "PENDING",
-        wilayaId: orderData.wilayaId,
-        customerId: orderData.customerId || null,
-        items: {
-          create: orderData.items.map((item) => ({
-            quantity: item.quantity,
-            priceAtPurchase: item.priceAtPurchase,
-            prodVariantId: item.prodVariantId,
-          })),
+    // Use a transaction to ensure both order creation and stock decrement are atomic
+    const order = await prisma.$transaction(async (tx) => {
+      // Create the order
+      const newOrder = await tx.order.create({
+        data: {
+          name: orderData.name,
+          email: orderData.email,
+          phone: orderData.phone,
+          total: Math.round(orderData.total),
+          status: "PENDING",
+          wilayaId: orderData.wilayaId,
+          customerId: orderData.customerId || null,
+          items: {
+            create: orderData.items.map((item) => ({
+              quantity: item.quantity,
+              priceAtPurchase: item.priceAtPurchase,
+              prodVariantId: item.prodVariantId,
+            })),
+          },
         },
-      },
-      include: {
-        items: true,
-        wilaya: true,
-      },
-    });
-
-    // Clear the cart after order creation
-    // For logged-in users, find cart by userId
-    if (orderData.customerId) {
-      const cart = await prisma.cart.findUnique({
-        where: { userId: orderData.customerId },
+        include: {
+          items: true,
+          wilaya: true,
+        },
       });
 
-      if (cart) {
-        await prisma.cartItem.deleteMany({
-          where: { cartId: cart.id },
+      // Decrement the stock for each ordered item
+      for (const item of orderData.items) {
+        await tx.productVariant.update({
+          where: { id: item.prodVariantId },
+          data: {
+            stock: {
+              update: {
+                qty: {
+                  decrement: item.quantity,
+                },
+              },
+            },
+          },
         });
       }
-    }
+
+      // Clear the cart after order creation, for logged-in users
+      if (orderData.customerId) {
+        const cart = await tx.cart.findUnique({
+          where: { userId: orderData.customerId },
+        });
+
+        if (cart) {
+          await tx.cartItem.deleteMany({
+            where: { cartId: cart.id },
+          });
+        }
+      }
+
+      return newOrder;
+    });
 
     revalidatePath("/checkout");
     return { success: true, order };
