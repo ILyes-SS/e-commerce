@@ -16,11 +16,9 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
   useEffect(() => {
     setSelectedColor(product.variants[0].color);
     setSelectedSize(product.variants[0].size);
-  }, []);
+  }, [product.variants]);
   // when user select another color a size is selected automatically
-  useEffect(() => {
-    setSelectedSize(colorsSizesMap[selectedColor || ""]?.[0]);
-  }, [selectedColor]);
+
   const selectedVariant = product.variants.find(
     (variant) =>
       variant.color === selectedColor && variant.size === selectedSize
@@ -35,6 +33,9 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
     },
     {} as Record<string, string[]>
   );
+  useEffect(() => {
+    setSelectedSize(colorsSizesMap[selectedColor || ""]?.[0]);
+  }, [setSelectedSize, selectedColor]);
   const variantInCart = cartItems.find(
     (item) => item.color === selectedColor && item.size === selectedSize
   );

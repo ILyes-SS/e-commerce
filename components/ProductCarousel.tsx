@@ -34,8 +34,8 @@ const ProductCarousel = ({
             className="w-full h-full object-cover"
             src={mainImage}
             alt={mainImage}
-            width={100}
-            height={100}
+            width={300}
+            height={400}
           />
         </SwiperSlide>
         {images?.map((image, index) => (
@@ -44,8 +44,8 @@ const ProductCarousel = ({
               className="w-full h-full object-cover"
               src={image.imageUrl}
               alt={image.productId + " " + index || ""}
-              width={100}
-              height={100}
+              width={300}
+              height={400}
             />
           </SwiperSlide>
         ))}
