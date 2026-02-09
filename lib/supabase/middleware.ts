@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import prisma from "../prisma";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -45,6 +46,19 @@ export async function updateSession(request: NextRequest) {
     // Don't redirect on auth errors, let the route handle it
   }
   const user = data?.claims;
+
+  const userPrisma = await prisma.user.findUnique({
+    where: {
+      email: user?.email ||'a',
+    },
+    select: {
+      role: true,
+    },
+  });
+
+  if (userPrisma?.role !== "ADMIN" && request.url.includes("/products-management")) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
   // if (
   //   !user &&
