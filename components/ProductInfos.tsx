@@ -25,10 +25,11 @@ const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
   );
   const colorsSizesMap = product.variants.reduce(
     (acc, variant: ProductVariant) => {
-      if (!acc[variant.color]) {
-        acc[variant.color] = [];
+      const color = variant.color || "default";
+      if (!acc[color]) {
+        acc[color] = [];
       }
-      acc[variant.color].push(variant.size);
+      acc[color].push(variant.size || "");
       return acc;
     },
     {} as Record<string, string[]>
