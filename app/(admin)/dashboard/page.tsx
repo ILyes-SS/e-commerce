@@ -3,16 +3,10 @@ import {
   DollarSign, 
   ShoppingCart, 
   Package, 
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  Truck,
-  XCircle
+  TrendingUp
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { OrderStatus } from "@/app/generated/prisma";
 import OrdersTable from "./components/OrdersTable";
-import RecentOrdersCard from "./components/RecentOrdersCard";
 
 async function getDashboardStats() {
   // Get total revenue (sum of all order totals)
@@ -22,11 +16,6 @@ async function getDashboardStats() {
     },
   });
 
-  // Get order counts by status
-  const orderCounts = await prisma.order.groupBy({
-    by: ['status'],
-    _count: true,
-  });
 
   // Get total orders
   const totalOrders = await prisma.order.count();
@@ -76,24 +65,11 @@ async function getDashboardStats() {
     },
   });
 
-  // Calculate stats by status
-  const statusCounts = {
-    pending: 0,
-    processing: 0,
-    shipped: 0,
-    cancelled: 0,
-  };
-
-  orderCounts.forEach((item) => {
-    statusCounts[item.status.toLowerCase() as keyof typeof statusCounts] = item._count;
-  });
-
   return {
     totalRevenue: totalRevenue._sum.total || 0,
     totalOrders,
     totalProducts,
     lowStockProducts,
-    statusCounts,
     recentOrders,
   };
 }
@@ -132,32 +108,6 @@ export default async function DashboardPage() {
     },
   ];
 
-  const orderStatusCards = [
-    {
-      title: "Pending",
-      value: stats.statusCounts.pending.toString(),
-      icon: Clock,
-      color: "text-yellow-500 bg-yellow-500/10",
-    },
-    {
-      title: "Processing",
-      value: stats.statusCounts.processing.toString(),
-      icon: Package,
-      color: "text-blue-500 bg-blue-500/10",
-    },
-    {
-      title: "Shipped",
-      value: stats.statusCounts.shipped.toString(),
-      icon: Truck,
-      color: "text-green-500 bg-green-500/10",
-    },
-    {
-      title: "Cancelled",
-      value: stats.statusCounts.cancelled.toString(),
-      icon: XCircle,
-      color: "text-red-500 bg-red-500/10",
-    },
-  ];
 
   return (
     <div className="container max-w-7xl py-8">
@@ -190,51 +140,21 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Order Status Cards */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Order Status Overview</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {orderStatusCards.map((status) => (
-            <Card key={status.title} className="border shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className={`p-3 rounded-xl ${status.color}`}>
-                  <status.icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{status.value}</p>
-                  <p className="text-sm text-muted-foreground">{status.title}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
       {/* Recent Orders Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Orders Table - Takes 2/3 of the space */}
-        <div className="lg:col-span-2">
-          <Card className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Recent Orders
-              </CardTitle>
-              <CardDescription>
-                Latest 10 orders from your store
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <OrdersTable orders={stats.recentOrders} />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Stats Sidebar - Takes 1/3 of the space */}
-        <div className="space-y-6">
-          <RecentOrdersCard orders={stats.recentOrders.slice(0, 5)} />
-        </div>
-      </div>
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5" />
+            Recent Orders
+          </CardTitle>
+          <CardDescription>
+            Latest 10 orders from your store
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OrdersTable orders={stats.recentOrders} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
