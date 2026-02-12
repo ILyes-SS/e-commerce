@@ -1,81 +1,10 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
-// Types for stock management
-export type StockVariantWithProduct = {
-  id: string;
-  price: number;
-  compareAtPrice: number | null;
-  color: string | null;
-  size: string | null;
-  unit: string | null;
-  createdAt: Date;
-  prodId: string;
-  product: {
-    id: string;
-    name: string;
-    slug: string;
-    image: string;
-  };
-  stock: {
-    id: string;
-    qty: number;
-  } | null;
-};
-
-// Get all product variants with their stock and product info
-export async function getAllVariantsWithStock(): Promise<StockVariantWithProduct[]> {
-  try {
-    const variants = await prisma.productVariant.findMany({
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            image: true,
-          },
-        },
-        stock: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-    return variants as StockVariantWithProduct[];
-  } catch (error) {
-    console.error("Error fetching variants with stock:", error);
-    throw error;
-  }
-}
-
-// Get a single product variant by ID
-export async function getVariantById(id: string): Promise<StockVariantWithProduct | null> {
-  try {
-    const variant = await prisma.productVariant.findUnique({
-      where: { id },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            image: true,
-          },
-        },
-        stock: true,
-      },
-    });
-    return variant as StockVariantWithProduct | null;
-  } catch (error) {
-    console.error("Error fetching variant:", error);
-    throw error;
-  }
-}
-
-// Get all products for dropdown selection
-export async function getAllProducts() {
+// Get all products with their variants and stock info (for the stock page)
+export async function getProductsWithVariantsStock() {
   try {
     const products = await prisma.product.findMany({
       select: {
@@ -83,120 +12,43 @@ export async function getAllProducts() {
         name: true,
         slug: true,
         image: true,
+        lowStock: true,
+        variants: {
+          include: {
+            stock: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
       },
-      orderBy: {
-        name: "asc",
-      },
+      orderBy: { name: "asc" },
     });
-    return products;
+    return { success: true, data: products };
   } catch (error) {
-    console.error("Error fetching products:", error);
-    throw error;
+    console.error("Error fetching products with variants:", error);
+    return { success: false, error: "Failed to fetch data" };
   }
 }
 
-// Create a new product variant with stock
-export async function createVariantWithStock(data: {
-  prodId: string;
-  price: number;
-  compareAtPrice?: number | null;
-  color?: string | null;
-  size?: string | null;
-  unit?: string | null;
-  stockQty: number;
-}) {
+// Get variants for a specific product (used in Add Stock dialog)
+export async function getVariantsByProductId(productId: string) {
   try {
-    const variant = await prisma.productVariant.create({
-      data: {
-        prodId: data.prodId,
-        price: data.price,
-        compareAtPrice: data.compareAtPrice || null,
-        color: data.color || null,
-        size: data.size || null,
-        unit: data.unit || null,
-        stock: {
-          create: {
-            qty: data.stockQty,
-          },
-        },
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            image: true,
-          },
-        },
-        stock: true,
-      },
-    });
-    return { success: true, variant };
-  } catch (error) {
-    console.error("Error creating variant:", error);
-    return { success: false, error: String(error) };
-  }
-}
-
-// Update a product variant and its stock
-export async function updateVariantWithStock(
-  id: string,
-  data: {
-    prodId?: string;
-    price?: number;
-    compareAtPrice?: number | null;
-    color?: string | null;
-    size?: string | null;
-    unit?: string | null;
-    stockQty?: number;
-  }
-) {
-  try {
-    // Update variant
-    const variant = await prisma.productVariant.update({
-      where: { id },
-      data: {
-        prodId: data.prodId,
-        price: data.price,
-        compareAtPrice: data.compareAtPrice,
-        color: data.color,
-        size: data.size,
-        unit: data.unit,
-      },
+    const variants = await prisma.productVariant.findMany({
+      where: { prodId: productId },
       include: {
         stock: true,
       },
+      orderBy: { createdAt: "desc" },
     });
-
-    // Update or create stock if provided
-    if (data.stockQty !== undefined) {
-      if (variant.stock) {
-        await prisma.stock.update({
-          where: { id: variant.stock.id },
-          data: { qty: data.stockQty },
-        });
-      } else {
-        await prisma.stock.create({
-          data: {
-            qty: data.stockQty,
-            prodVariantId: id,
-          },
-        });
-      }
-    }
-
-    return { success: true };
+    return { success: true, data: variants };
   } catch (error) {
-    console.error("Error updating variant:", error);
-    return { success: false, error: String(error) };
+    console.error("Error fetching variants:", error);
+    return { success: false, error: "Failed to fetch variants" };
   }
 }
 
-// Update only stock quantity
-export async function updateStockQuantity(variantId: string, qty: number) {
+// Update stock quantity for a single variant
+export async function updateStockQty(variantId: string, qty: number) {
   try {
-    // Check if stock exists
     const existingStock = await prisma.stock.findUnique({
       where: { prodVariantId: variantId },
     });
@@ -215,39 +67,58 @@ export async function updateStockQuantity(variantId: string, qty: number) {
       });
     }
 
+    revalidatePath("/stock");
     return { success: true };
   } catch (error) {
     console.error("Error updating stock:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to update stock" };
   }
 }
 
-// Delete a product variant (will cascade delete stock)
-export async function deleteVariant(id: string) {
+// Bulk update stock for multiple variants at once
+export async function bulkUpdateStock(
+  updates: { variantId: string; qty: number }[]
+) {
   try {
-    // First delete the stock if it exists
-    await prisma.stock.deleteMany({
-      where: { prodVariantId: id },
-    });
+    for (const update of updates) {
+      const existingStock = await prisma.stock.findUnique({
+        where: { prodVariantId: update.variantId },
+      });
 
-    // Delete cart items referencing this variant
-    await prisma.cartItem.deleteMany({
-      where: { prodVariantId: id },
-    });
+      if (existingStock) {
+        await prisma.stock.update({
+          where: { prodVariantId: update.variantId },
+          data: { qty: update.qty },
+        });
+      } else {
+        await prisma.stock.create({
+          data: {
+            qty: update.qty,
+            prodVariantId: update.variantId,
+          },
+        });
+      }
+    }
 
-    // Delete order items referencing this variant
-    await prisma.orderProd.deleteMany({
-      where: { prodVariantId: id },
-    });
-
-    // Then delete the variant
-    await prisma.productVariant.delete({
-      where: { id },
-    });
-
+    revalidatePath("/stock");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting variant:", error);
-    return { success: false, error: String(error) };
+    console.error("Error bulk updating stock:", error);
+    return { success: false, error: "Failed to update stock" };
+  }
+}
+
+// Delete stock for a variant (sets it to no stock record)
+export async function deleteStock(variantId: string) {
+  try {
+    await prisma.stock.deleteMany({
+      where: { prodVariantId: variantId },
+    });
+
+    revalidatePath("/stock");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting stock:", error);
+    return { success: false, error: "Failed to delete stock" };
   }
 }

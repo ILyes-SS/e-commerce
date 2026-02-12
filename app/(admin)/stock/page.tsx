@@ -1,18 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import {
-  getAllVariantsWithStock,
-  getAllProducts,
-  createVariantWithStock,
-  updateVariantWithStock,
-  deleteVariant,
-  StockVariantWithProduct,
-} from "@/actions/stock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -22,680 +20,789 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Package,
+  PackageCheck,
+  PackageMinus,
+  PackageX,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  getProductsWithVariantsStock,
+  getVariantsByProductId,
+  updateStockQty,
+  bulkUpdateStock,
+  deleteStock,
+} from "@/actions/stock";
+import { getProducts } from "@/actions/admin/products";
 
-type Product = {
+type Stock = { id: string; qty: number; prodVariantId: string };
+
+type Variant = {
+  id: string;
+  price: number;
+  compareAtPrice: number | null;
+  color: string | null;
+  size: string | null;
+  unit: string | null;
+  prodId: string;
+  stock: Stock | null;
+};
+
+type ProductWithVariants = {
   id: string;
   name: string;
   slug: string;
   image: string;
+  lowStock: number;
+  variants: Variant[];
 };
 
+type SimpleProduct = { id: string; name: string };
+
 export default function StockPage() {
-  const [variants, setVariants] = useState<StockVariantWithProduct[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithVariants[]>([]);
+  const [allProducts, setAllProducts] = useState<SimpleProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  // Add Stock Dialog
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [productVariants, setProductVariants] = useState<Variant[]>([]);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [stockInputs, setStockInputs] = useState<Record<string, number>>({});
+
+  // Edit Dialog
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editVariant, setEditVariant] = useState<
+    (Variant & { productName: string }) | null
+  >(null);
+  const [editQty, setEditQty] = useState(0);
+
+  // Delete Dialog
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState<StockVariantWithProduct | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    prodId: "",
-    price: "",
-    compareAtPrice: "",
-    color: "",
-    size: "",
-    unit: "",
-    stockQty: "",
-  });
-
-  const showToast = (message: string, type: "success" | "error") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const fetchData = async () => {
-    try {
-      const [variantsData, productsData] = await Promise.all([
-        getAllVariantsWithStock(),
-        getAllProducts(),
-      ]);
-      setVariants(variantsData);
-      setProducts(productsData);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      showToast("Failed to load data", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [deleteVariant, setDeleteVariant] = useState<
+    (Variant & { productName: string }) | null
+  >(null);
 
   useEffect(() => {
-    fetchData();
+    loadData();
   }, []);
 
-  const resetForm = () => {
-    setFormData({
-      prodId: "",
-      price: "",
-      compareAtPrice: "",
-      color: "",
-      size: "",
-      unit: "",
-      stockQty: "",
-    });
-  };
+  async function loadData() {
+    setLoading(true);
+    const [stockRes, productsRes] = await Promise.all([
+      getProductsWithVariantsStock(),
+      getProducts(),
+    ]);
+    if (stockRes.success && stockRes.data) {
+      setProducts(stockRes.data as ProductWithVariants[]);
+    }
+    if (productsRes.success && productsRes.data) {
+      setAllProducts(productsRes.data as SimpleProduct[]);
+    }
+    setLoading(false);
+  }
 
-  const handleCreate = async () => {
-    if (!formData.prodId || !formData.price || !formData.stockQty) {
-      showToast("Please fill in required fields (Product, Price, Stock Qty)", "error");
+  // When a product is selected in Add Stock dialog, fetch its variants
+  async function handleProductSelect(productId: string) {
+    setSelectedProductId(productId);
+    setProductVariants([]);
+    setStockInputs({});
+
+    if (!productId) return;
+
+    setLoadingVariants(true);
+    const res = await getVariantsByProductId(productId);
+    if (res.success && res.data) {
+      const variants = res.data as Variant[];
+      setProductVariants(variants);
+      // Pre-fill stock inputs with existing quantities
+      const inputs: Record<string, number> = {};
+      variants.forEach((v) => {
+        inputs[v.id] = v.stock?.qty ?? 0;
+      });
+      setStockInputs(inputs);
+    }
+    setLoadingVariants(false);
+  }
+
+  async function handleBulkSave() {
+    const updates = Object.entries(stockInputs).map(([variantId, qty]) => ({
+      variantId,
+      qty,
+    }));
+
+    if (updates.length === 0) {
+      toast.error("No variants to update");
       return;
     }
 
-    const result = await createVariantWithStock({
-      prodId: formData.prodId,
-      price: parseFloat(formData.price),
-      compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : null,
-      color: formData.color || null,
-      size: formData.size || null,
-      unit: formData.unit || null,
-      stockQty: parseInt(formData.stockQty),
-    });
-
+    const result = await bulkUpdateStock(updates);
     if (result.success) {
-      showToast("Variant created successfully!", "success");
-      setIsCreateOpen(false);
-      resetForm();
-      fetchData();
+      toast.success("Stock updated successfully");
+      setIsAddOpen(false);
+      setSelectedProductId("");
+      setProductVariants([]);
+      setStockInputs({});
+      loadData();
     } else {
-      showToast("Failed to create variant", "error");
+      toast.error(result.error || "Failed to update stock");
     }
-  };
+  }
 
-  const handleEdit = async () => {
-    if (!selectedVariant) return;
-
-    const result = await updateVariantWithStock(selectedVariant.id, {
-      prodId: formData.prodId || undefined,
-      price: formData.price ? parseFloat(formData.price) : undefined,
-      compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : null,
-      color: formData.color || null,
-      size: formData.size || null,
-      unit: formData.unit || null,
-      stockQty: formData.stockQty ? parseInt(formData.stockQty) : undefined,
-    });
-
-    if (result.success) {
-      showToast("Variant updated successfully!", "success");
-      setIsEditOpen(false);
-      setSelectedVariant(null);
-      resetForm();
-      fetchData();
-    } else {
-      showToast("Failed to update variant", "error");
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedVariant) return;
-
-    const result = await deleteVariant(selectedVariant.id);
-
-    if (result.success) {
-      showToast("Variant deleted successfully!", "success");
-      setIsDeleteOpen(false);
-      setSelectedVariant(null);
-      fetchData();
-    } else {
-      showToast("Failed to delete variant", "error");
-    }
-  };
-
-  const openEditModal = (variant: StockVariantWithProduct) => {
-    setSelectedVariant(variant);
-    setFormData({
-      prodId: variant.prodId,
-      price: variant.price.toString(),
-      compareAtPrice: variant.compareAtPrice?.toString() || "",
-      color: variant.color || "",
-      size: variant.size || "",
-      unit: variant.unit || "",
-      stockQty: variant.stock?.qty.toString() || "0",
-    });
+  function openEditDialog(variant: Variant, productName: string) {
+    setEditVariant({ ...variant, productName });
+    setEditQty(variant.stock?.qty ?? 0);
     setIsEditOpen(true);
-  };
+  }
 
-  const openDeleteModal = (variant: StockVariantWithProduct) => {
-    setSelectedVariant(variant);
+  async function handleEditSave() {
+    if (!editVariant) return;
+
+    const result = await updateStockQty(editVariant.id, editQty);
+    if (result.success) {
+      toast.success("Stock updated successfully");
+      setIsEditOpen(false);
+      setEditVariant(null);
+      loadData();
+    } else {
+      toast.error(result.error || "Failed to update stock");
+    }
+  }
+
+  function openDeleteDialog(variant: Variant, productName: string) {
+    setDeleteVariant({ ...variant, productName });
     setIsDeleteOpen(true);
-  };
+  }
 
-  const filteredVariants = variants.filter(
-    (variant) =>
-      variant.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      variant.color?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      variant.size?.toLowerCase().includes(searchTerm.toLowerCase())
+  async function handleDelete() {
+    if (!deleteVariant) return;
+
+    const result = await deleteStock(deleteVariant.id);
+    if (result.success) {
+      toast.success("Stock record deleted");
+      setIsDeleteOpen(false);
+      setDeleteVariant(null);
+      loadData();
+    } else {
+      toast.error(result.error || "Failed to delete stock");
+    }
+  }
+
+  function formatPrice(price: number) {
+    return `${price.toLocaleString()} DA`;
+  }
+
+  function formatVariantLabel(variant: Variant) {
+    const parts = [variant.color, variant.size, variant.unit].filter(Boolean);
+    return parts.length > 0 ? parts.join(" / ") : "Default";
+  }
+
+  // Flatten all variants across products for display and filtering
+  const allVariants = products.flatMap((product) =>
+    product.variants.map((variant) => ({
+      ...variant,
+      productName: product.name,
+      productImage: product.image,
+      lowStock: product.lowStock,
+    }))
   );
 
-  const getStockStatus = (qty: number | undefined) => {
-    if (qty === undefined || qty === 0) return { label: "Out of Stock", color: "bg-red-500" };
-    if (qty <= 5) return { label: "Low Stock", color: "bg-amber-500" };
-    return { label: "In Stock", color: "bg-emerald-500" };
-  };
+  const filteredVariants = allVariants.filter(
+    (v) =>
+      v.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.color?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.size?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Stats
+  const totalVariants = allVariants.length;
+  const inStock = allVariants.filter(
+    (v) => (v.stock?.qty ?? 0) > (v.lowStock ?? 5)
+  ).length;
+  const lowStock = allVariants.filter(
+    (v) => (v.stock?.qty ?? 0) > 0 && (v.stock?.qty ?? 0) <= (v.lowStock ?? 5)
+  ).length;
+  const outOfStock = allVariants.filter(
+    (v) => !v.stock || v.stock.qty === 0
+  ).length;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+              Stock Management
+            </h1>
+            <p className="text-muted-foreground mt-1">Loading stock data...</p>
+          </div>
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-xl text-white font-medium transition-all duration-300 ${
-            toast.type === "success"
-              ? "bg-gradient-to-r from-emerald-500 to-teal-500"
-              : "bg-gradient-to-r from-red-500 to-rose-500"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
             Stock Management
           </h1>
-          <p className="text-slate-400 mt-2">
-            Manage your product variants and inventory levels
+          <p className="text-muted-foreground">
+            Manage your product variant inventory levels
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4">
-            <div className="text-slate-400 text-sm">Total Variants</div>
-            <div className="text-2xl font-bold text-white">{variants.length}</div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4">
-            <div className="text-slate-400 text-sm">In Stock</div>
-            <div className="text-2xl font-bold text-emerald-400">
-              {variants.filter((v) => (v.stock?.qty || 0) > 5).length}
-            </div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4">
-            <div className="text-slate-400 text-sm">Low Stock</div>
-            <div className="text-2xl font-bold text-amber-400">
-              {variants.filter((v) => (v.stock?.qty || 0) > 0 && (v.stock?.qty || 0) <= 5).length}
-            </div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4">
-            <div className="text-slate-400 text-sm">Out of Stock</div>
-            <div className="text-2xl font-bold text-red-400">
-              {variants.filter((v) => !v.stock || v.stock.qty === 0).length}
-            </div>
-          </div>
-        </div>
-
-        {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <Input
-              type="text"
-              placeholder="Search by product name, color, or size..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
-            />
-          </div>
-
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setIsCreateOpen(true);
-                }}
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-medium shadow-lg shadow-indigo-500/25"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Variant
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold">Create New Variant</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label className="text-slate-300">Product *</Label>
-                  <select
-                    value={formData.prodId}
-                    onChange={(e) => setFormData({ ...formData, prodId: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Select a product</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-300">Price *</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Compare At Price</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formData.compareAtPrice}
-                      onChange={(e) => setFormData({ ...formData, compareAtPrice: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-300">Color</Label>
-                    <Input
-                      type="text"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                      placeholder="e.g., Red"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Size</Label>
-                    <Input
-                      type="text"
-                      value={formData.size}
-                      onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                      placeholder="e.g., XL"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-300">Unit</Label>
-                    <Input
-                      type="text"
-                      value={formData.unit}
-                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                      placeholder="e.g., kg"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Stock Quantity *</Label>
-                    <Input
-                      type="number"
-                      value={formData.stockQty}
-                      onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-white/80 backdrop-blur-sm border-slate-200/50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-wider">
+                Total Variants
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-slate-900">
+                {totalVariants}
+              </p>
+              <div className="p-2.5 rounded-xl bg-blue-500/10">
+                <Package className="h-5 w-5 text-blue-500" />
               </div>
-              <DialogFooter className="gap-2">
-                <DialogClose asChild>
-                  <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <Button
-                  onClick={handleCreate}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-                >
-                  Create
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-emerald-50/80 backdrop-blur-sm border-emerald-200/50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-wider text-emerald-700">
+                In Stock
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-emerald-600">{inStock}</p>
+              <div className="p-2.5 rounded-xl bg-emerald-500/10">
+                <PackageCheck className="h-5 w-5 text-emerald-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-amber-50/80 backdrop-blur-sm border-amber-200/50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-wider text-amber-700">
+                Low Stock
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-amber-600">{lowStock}</p>
+              <div className="p-2.5 rounded-xl bg-amber-500/10">
+                <PackageMinus className="h-5 w-5 text-amber-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-red-50/80 backdrop-blur-sm border-red-200/50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-wider text-red-700">
+                Out of Stock
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <p className="text-2xl font-bold text-red-600">{outOfStock}</p>
+              <div className="p-2.5 rounded-xl bg-red-500/10">
+                <PackageX className="h-5 w-5 text-red-500" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Variants Table */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-700/50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Variant Details
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/50">
+        {/* Stock Table Card */}
+        <Card className="bg-white/80 backdrop-blur-sm border-slate-200/50 shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle className="text-lg font-semibold">
+                  Inventory
+                </CardTitle>
+                <CardDescription>
+                  {filteredVariants.length} variant
+                  {filteredVariants.length !== 1 ? "s" : ""} total
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by product, color, or size..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9 bg-white"
+                  />
+                </div>
+
+                <Dialog
+                  open={isAddOpen}
+                  onOpenChange={(open) => {
+                    setIsAddOpen(open);
+                    if (!open) {
+                      setSelectedProductId("");
+                      setProductVariants([]);
+                      setStockInputs({});
+                    }
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add / Update Stock
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>Add / Update Stock</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {/* Product selector */}
+                      <div className="space-y-2">
+                        <Label htmlFor="product">Select Product *</Label>
+                        <select
+                          id="product"
+                          value={selectedProductId}
+                          onChange={(e) => handleProductSelect(e.target.value)}
+                          className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+                        >
+                          <option value="">Choose a product</option>
+                          {allProducts.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Variants list with stock inputs */}
+                      {loadingVariants && (
+                        <div className="flex items-center justify-center py-6">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        </div>
+                      )}
+
+                      {!loadingVariants &&
+                        selectedProductId &&
+                        productVariants.length === 0 && (
+                          <div className="text-center py-6 text-muted-foreground border rounded-lg border-dashed">
+                            <PackageX className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                            <p className="text-sm">
+                              No variants found for this product.
+                            </p>
+                            <p className="text-xs mt-1">
+                              Create variants first in Products Management.
+                            </p>
+                          </div>
+                        )}
+
+                      {productVariants.length > 0 && (
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">
+                            Product Variants
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">
+                              (variant details are auto-filled)
+                            </span>
+                          </Label>
+                          <div className="border rounded-lg divide-y max-h-72 overflow-y-auto">
+                            {productVariants.map((variant) => {
+                              const currentQty = variant.stock?.qty ?? 0;
+                              const isOut = currentQty === 0;
+                              return (
+                                <div
+                                  key={variant.id}
+                                  className="flex items-center justify-between p-3.5 gap-4 hover:bg-slate-50/50 transition-colors"
+                                >
+                                  <div className="flex-1 min-w-0 space-y-1.5">
+                                    {/* Variant attributes display */}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {variant.color && (
+                                        <span className="inline-flex items-center gap-1.5 text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
+                                          <span
+                                            className="w-3 h-3 rounded-full border border-slate-300 shrink-0"
+                                            style={{
+                                              backgroundColor: variant.color,
+                                            }}
+                                          />
+                                          {variant.color}
+                                        </span>
+                                      )}
+                                      {variant.size && (
+                                        <span className="inline-flex items-center text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                          {variant.size}
+                                        </span>
+                                      )}
+                                      {variant.unit && (
+                                        <span className="inline-flex items-center text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">
+                                          {variant.unit}
+                                        </span>
+                                      )}
+                                      {!variant.color &&
+                                        !variant.size &&
+                                        !variant.unit && (
+                                          <span className="text-xs text-muted-foreground">
+                                            Default variant
+                                          </span>
+                                        )}
+                                    </div>
+                                    {/* Price & stock info */}
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                      <span className="font-medium text-slate-700">
+                                        {formatPrice(variant.price)}
+                                      </span>
+                                      {variant.compareAtPrice && (
+                                        <span className="line-through">
+                                          {formatPrice(variant.compareAtPrice)}
+                                        </span>
+                                      )}
+                                      <span>·</span>
+                                      <span
+                                        className={
+                                          isOut
+                                            ? "text-red-500"
+                                            : "text-emerald-600"
+                                        }
+                                      >
+                                        Current: {currentQty}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <Label className="text-xs whitespace-nowrap text-muted-foreground">
+                                      New Qty
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      value={stockInputs[variant.id] ?? 0}
+                                      onChange={(e) =>
+                                        setStockInputs({
+                                          ...stockInputs,
+                                          [variant.id]:
+                                            parseInt(e.target.value) || 0,
+                                        })
+                                      }
+                                      className="w-20"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline">
+                          Cancel
+                        </Button>
+                      </DialogClose>
+                      <Button
+                        onClick={handleBulkSave}
+                        disabled={productVariants.length === 0}
+                      >
+                        Save Stock
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Product</TableHead>
+                  <TableHead>Variant</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead className="text-center">Stock</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-24">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredVariants.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
-                      No variants found
-                    </td>
-                  </tr>
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-12 text-muted-foreground"
+                    >
+                      <PackageX className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                      <p className="text-sm font-medium">No variants found</p>
+                      <p className="text-xs mt-1">
+                        Add products and variants first!
+                      </p>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   filteredVariants.map((variant) => {
-                    const stockStatus = getStockStatus(variant.stock?.qty);
+                    const qty = variant.stock?.qty ?? 0;
+                    const isOut = qty === 0;
+                    const isLow =
+                      qty > 0 && qty <= (variant.lowStock ?? 5);
                     return (
-                      <tr
-                        key={variant.id}
-                        className="hover:bg-slate-700/30 transition-colors"
-                      >
-                        <td className="px-6 py-4">
+                      <TableRow key={variant.id}>
+                        <TableCell className="font-medium">
                           <div className="flex items-center gap-3">
-                            <div className="relative h-12 w-12 rounded-lg overflow-hidden bg-slate-700">
-                              <Image
-                                src={variant.product.image}
-                                alt={variant.product.name}
-                                fill
-                                className="object-cover"
+                            <div className="relative w-10 h-10 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                              <img
+                                src={variant.productImage}
+                                alt={variant.productName}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src =
+                                    "https://placehold.co/40x40?text=No";
+                                }}
                               />
                             </div>
-                            <div>
-                              <div className="font-medium text-white">
-                                {variant.product.name}
-                              </div>
-                              <div className="text-sm text-slate-400">
-                                ID: {variant.id.slice(0, 8)}...
-                              </div>
-                            </div>
+                            <span className="text-sm">
+                              {variant.productName}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-2">
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {variant.color && (
-                              <span className="px-2 py-1 bg-slate-700 rounded text-sm text-white">
+                              <span className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full">
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full border border-slate-300"
+                                  style={{
+                                    backgroundColor: variant.color,
+                                  }}
+                                />
                                 {variant.color}
                               </span>
                             )}
                             {variant.size && (
-                              <span className="px-2 py-1 bg-slate-700 rounded text-sm text-white">
+                              <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full">
                                 {variant.size}
                               </span>
                             )}
                             {variant.unit && (
-                              <span className="px-2 py-1 bg-slate-700 rounded text-sm text-slate-300">
+                              <span className="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full">
                                 {variant.unit}
                               </span>
                             )}
-                            {!variant.color && !variant.size && !variant.unit && (
-                              <span className="text-slate-500">Default</span>
-                            )}
+                            {!variant.color &&
+                              !variant.size &&
+                              !variant.unit && (
+                                <span className="text-xs text-muted-foreground">
+                                  Default
+                                </span>
+                              )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="font-semibold text-white">
-                            {variant.price.toFixed(2)} DA
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {formatPrice(variant.price)}
                           </div>
                           {variant.compareAtPrice && (
-                            <div className="text-sm text-slate-400 line-through">
-                              {variant.compareAtPrice.toFixed(2)} DA
+                            <div className="text-xs text-muted-foreground line-through">
+                              {formatPrice(variant.compareAtPrice)}
                             </div>
                           )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-xl font-bold text-white">
-                            {variant.stock?.qty ?? 0}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
+                        </TableCell>
+                        <TableCell className="text-center">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white ${stockStatus.color}`}
+                            className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-full text-xs font-semibold ${
+                              isOut
+                                ? "bg-red-500/10 text-red-600"
+                                : isLow
+                                ? "bg-amber-500/10 text-amber-600"
+                                : "bg-emerald-500/10 text-emerald-600"
+                            }`}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                            {stockStatus.label}
+                            {qty}
                           </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => openEditModal(variant)}
-                              className="p-2 rounded-lg bg-slate-700 hover:bg-indigo-500 text-slate-300 hover:text-white transition-colors"
-                              title="Edit"
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full border ${
+                              isOut
+                                ? "bg-red-500/10 text-red-600 border-red-500/20"
+                                : isLow
+                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                            }`}
+                          >
+                            {isOut
+                              ? "Out of Stock"
+                              : isLow
+                              ? "Low Stock"
+                              : "In Stock"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() =>
+                                openEditDialog(variant, variant.productName)
+                              }
+                              className="hover:bg-slate-100"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(variant)}
-                              className="p-2 rounded-lg bg-slate-700 hover:bg-red-500 text-slate-300 hover:text-white transition-colors"
-                              title="Delete"
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() =>
+                                openDeleteDialog(variant, variant.productName)
+                              }
+                              disabled={!variant.stock}
+                              title={
+                                !variant.stock
+                                  ? "No stock record to delete"
+                                  : "Delete stock record"
+                              }
+                              className="hover:bg-red-50"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            </button>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
-      {/* Edit Modal */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Edit Variant</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label className="text-slate-300">Product *</Label>
-              <select
-                value={formData.prodId}
-                onChange={(e) => setFormData({ ...formData, prodId: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-slate-300">Price *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-slate-300">Compare At Price</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.compareAtPrice}
-                  onChange={(e) => setFormData({ ...formData, compareAtPrice: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-slate-300">Color</Label>
-                <Input
-                  type="text"
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-slate-300">Size</Label>
-                <Input
-                  type="text"
-                  value={formData.size}
-                  onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-slate-300">Unit</Label>
-                <Input
-                  type="text"
-                  value={formData.unit}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-slate-300">Stock Quantity *</Label>
-                <Input
-                  type="number"
-                  value={formData.stockQty}
-                  onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white mt-1"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <DialogClose asChild>
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button
-              onClick={handleEdit}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Modal */}
-      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-400">Delete Variant</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-slate-300">
-              Are you sure you want to delete this variant? This action cannot be undone.
-            </p>
-            {selectedVariant && (
-              <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
-                <div className="font-medium text-white">{selectedVariant.product.name}</div>
-                <div className="text-sm text-slate-400">
-                  {[selectedVariant.color, selectedVariant.size, selectedVariant.unit]
-                    .filter(Boolean)
-                    .join(" / ") || "Default variant"}
+        {/* Edit Stock Dialog */}
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Edit Stock Quantity</DialogTitle>
+            </DialogHeader>
+            {editVariant && (
+              <div className="space-y-4 py-2">
+                <div className="p-3 border rounded-lg bg-slate-50/80">
+                  <div className="font-medium text-sm">
+                    {editVariant.productName}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    {editVariant.color && (
+                      <span className="inline-flex items-center gap-1 text-xs bg-white text-slate-600 px-1.5 py-0.5 rounded-full border">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full border border-slate-300"
+                          style={{ backgroundColor: editVariant.color }}
+                        />
+                        {editVariant.color}
+                      </span>
+                    )}
+                    {editVariant.size && (
+                      <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full">
+                        {editVariant.size}
+                      </span>
+                    )}
+                    {editVariant.unit && (
+                      <span className="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full">
+                        {editVariant.unit}
+                      </span>
+                    )}
+                    {!editVariant.color &&
+                      !editVariant.size &&
+                      !editVariant.unit && (
+                        <span className="text-xs text-muted-foreground">
+                          Default variant
+                        </span>
+                      )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editQty">Stock Quantity</Label>
+                  <Input
+                    id="editQty"
+                    type="number"
+                    min="0"
+                    value={editQty}
+                    onChange={(e) => setEditQty(parseInt(e.target.value) || 0)}
+                  />
                 </div>
               </div>
             )}
-          </div>
-          <DialogFooter className="gap-2">
-            <DialogClose asChild>
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                Cancel
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button onClick={handleEditSave}>Update</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Delete Stock Record</DialogTitle>
+            </DialogHeader>
+            {deleteVariant && (
+              <div className="py-2">
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete the stock record for:
+                </p>
+                <div className="mt-3 p-3 border rounded-lg bg-red-50/50">
+                  <div className="font-medium text-sm">
+                    {deleteVariant.productName}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      {formatVariantLabel(deleteVariant)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs font-medium text-red-600">
+                      Qty: {deleteVariant.stock?.qty ?? 0}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  This will remove the stock record. The variant itself will not
+                  be deleted.
+                </p>
+              </div>
+            )}
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button variant="destructive" onClick={handleDelete}>
+                Delete
               </Button>
-            </DialogClose>
-            <Button
-              onClick={handleDelete}
-              className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600"
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
