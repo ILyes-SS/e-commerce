@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -17,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { OrderStatus } from "@/app/generated/prisma";
+import OrderStatusSelect from "./components/OrderStatusSelect";
 
 async function getOrders() {
   const orders = await prisma.order.findMany({
@@ -182,9 +182,10 @@ export default async function OrdersPage() {
                     <div className="space-y-1">
                       <CardTitle className="text-lg font-semibold flex items-center gap-3">
                         Order #{order.id.slice(0, 8).toUpperCase()}
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status}
-                        </Badge>
+                        <OrderStatusSelect
+                          orderId={order.id}
+                          currentStatus={order.status}
+                        />
                       </CardTitle>
                       <CardDescription className="space-y-0.5">
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
