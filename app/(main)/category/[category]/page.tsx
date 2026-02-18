@@ -1,11 +1,9 @@
 import ProductsDisplay from "@/components/ProductsDisplay";
 import prisma from "@/lib/prisma";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 
-const page = async ({
-  params,
-  searchParams,
-}: {
+type Props = {
   params: Promise<{ category: string }>;
   searchParams: Promise<{
     min?: string;
@@ -13,7 +11,31 @@ const page = async ({
     sort: string;
     brands?: string[] | string;
   }>;
-}) => {
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { category } = await params;
+  const cat = await prisma.category.findFirst({
+    where: { slug: category },
+    select: { title: true },
+  });
+
+  const title = cat ? `Shop ${cat.title}` : "Shop Products";
+  const description = cat
+    ? `Browse our ${cat.title} collection. Find the best deals and latest products.`
+    : "Browse our product collection.";
+
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+  };
+}
+
+const page = async ({
+  params,
+  searchParams,
+}: Props) => {
   const { category } = await params;
   const { min, max, sort, brands } = await searchParams;
   const minPrice = min ? parseFloat(min) : undefined;
@@ -66,3 +88,4 @@ const page = async ({
 };
 
 export default page;
+

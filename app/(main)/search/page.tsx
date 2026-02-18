@@ -1,6 +1,12 @@
 import ProductsDisplay from "@/components/ProductsDisplay";
 import prisma from "@/lib/prisma";
 import { Suspense } from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Search Products",
+  description: "Search through our wide range of products. Find exactly what you're looking for.",
+};
 
 const SearchPage = async ({
   searchParams,
