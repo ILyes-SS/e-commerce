@@ -6,7 +6,11 @@ import { Button } from "./ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Category } from "@/app/generated/prisma";
 
-const MobileCategoryMenu = ({ categories }) => {
+type CategoryWithSubcategories = Category & {
+  subcategories?: CategoryWithSubcategories[];
+};
+
+const MobileCategoryMenu = ({ categories }: { categories: CategoryWithSubcategories[] | null }) => {
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
 
   const toggleCategory = (categoryId: string) => {
