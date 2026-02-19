@@ -55,10 +55,10 @@ const Header = async () => {
               <DropdownMenuTrigger>
                 <Avatar>
                   <AvatarFallback>
-                    {user.user_metadata.name
+                    {user.user_metadata.name ? user.user_metadata.name
                       .split(" ")[0]
                       .substring(0, 1)
-                      .toUpperCase()}
+                      .toUpperCase() :user?.email?.substring(0, 1).toUpperCase()}
                   </AvatarFallback>
                   <AvatarImage src={user.user_metadata.avatar_url} />
                 </Avatar>
