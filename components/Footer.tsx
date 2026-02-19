@@ -85,7 +85,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/auth/history"
+                  href="/history"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Order History

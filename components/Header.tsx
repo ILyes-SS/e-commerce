@@ -66,7 +66,7 @@ const Header = async () => {
               <DropdownMenuContent>
                 <DropdownMenuItem>
                   <Link
-                    href="/auth/history"
+                    href="/history"
                     className="flex items-center gap-1"
                   >
                     <HistoryIcon className="mr-2 h-4 w-4" /> History

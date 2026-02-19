@@ -93,7 +93,7 @@ const MobileHeader = async () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
                   <Link
-                    href="/auth/history"
+                    href="/history"
                     className="flex items-center w-full"
                   >
                     <HistoryIcon className="mr-2 h-4 w-4" /> History

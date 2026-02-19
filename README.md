@@ -157,7 +157,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the storefront.
 | `/auth/login`            | Sign in                              |
 | `/auth/sign-up`          | Create account                       |
 | `/auth/forgot-password`  | Password recovery                    |
-| `/auth/history`          | Order history (authenticated)        |
+| `/history`               | Order history (authenticated)        |
 | `/dashboard`             | Admin dashboard overview             |
 | `/products-management`   | Admin product/category/brand CRUD    |
 | `/orders`                | Admin order management               |
