@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import prisma from "../prisma";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -47,19 +46,15 @@ export async function updateSession(request: NextRequest) {
   }
   const user = data?.claims;
 
-  const userPrisma = await prisma.user.findUnique({
-    where: {
-      email: user?.email ||'a',
-    },
-    select: {
-      role: true,
-    },
-  });
+const { data: userSupabase } = await supabase
+  .from('User') // Ensure this exactly matches your table name
+  .select('role')
+  .eq('email', user?.email || 'a')
+  .single();
 
-  if (userPrisma?.role !== "ADMIN" && request.url.includes("/products-management")) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
+if (userSupabase?.role !== "ADMIN" && request.url.includes("/products-management")) {
+  return NextResponse.redirect(new URL("/", request.url));
+}
   // if (
   //   !user &&
   //   !request.nextUrl.pathname.startsWith("/login") &&
