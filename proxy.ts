@@ -1,7 +1,6 @@
 import { updateSession } from '@/lib/supabase/middleware'
 import { type NextRequest } from 'next/server'
 
-export const runtime = 'edge'
 
 export async function proxy(request: NextRequest) {
   return await updateSession(request)
