@@ -2,7 +2,7 @@
 
 A full-featured e-commerce storefront and admin dashboard built with **Next.js 16**, **React 19**, **Supabase**, and **Prisma**. Includes product browsing with advanced filtering, a real-time cart, a complete checkout flow with wilaya-based delivery, and a full admin panel for managing inventory, orders, and marketing.
 
-> 🔗 **Live Demo:** [ecommerce-ILyes](https://ecommerce-ILyes.com)
+> 🔗 **Live Demo:** [ecommerce-ILyes](https://ecommerce-ilyes.vercel.app/)
 
 
 ---
