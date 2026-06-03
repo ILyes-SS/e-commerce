@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import CategoriesCards from "@/components/CategoriesCards";
 import HomeCarousel from "../../components/HomeCarousel";
 import prisma from "@/lib/prisma";
