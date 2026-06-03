@@ -2,8 +2,7 @@
 
 A full-featured e-commerce storefront and admin dashboard built with **Next.js 16**, **React 19**, **Supabase**, and **Prisma**. Includes product browsing with advanced filtering, a real-time cart, a complete checkout flow with wilaya-based delivery, and a full admin panel for managing inventory, orders, and marketing.
 
-> 🔗 **Live Demo:** [ecommerce-ILyes](https://ecommerce-ILyes.com)
-
+> 🔗 **Live Demo:** [ecommerce-ILyes](https://ecommerce-ilyes.vercel.app/)
 
 ---
 
@@ -138,30 +137,30 @@ Open [http://localhost:3000](http://localhost:3000) to view the storefront.
 
 ### Demo Credentials
 
-| Role      | Email                    | Password       |
-| --------- | ------------------------ | -------------- |
-| **Admin** | `admin@test.com`      | `admin1234`    |
+| Role      | Email            | Password    |
+| --------- | ---------------- | ----------- |
+| **Admin** | `admin@test.com` | `admin1234` |
 
 > [!NOTE]
 > These are sample credentials. After setting up locally, create your own users via the sign-up page and manually assign the `ADMIN` role in the database or via Prisma Studio.
 
 ### Key Routes
 
-| Route                    | Description                          |
-| ------------------------ | ------------------------------------ |
-| `/`                      | Homepage — carousel, trending, categories |
-| `/search?q=...`          | Search results with filters          |
-| `/<category>`            | Category product listing             |
-| `/product/<slug>`        | Product detail page                  |
-| `/checkout`              | Checkout form                        |
-| `/auth/login`            | Sign in                              |
-| `/auth/sign-up`          | Create account                       |
-| `/auth/forgot-password`  | Password recovery                    |
-| `/history`               | Order history (authenticated)        |
-| `/dashboard`             | Admin dashboard overview             |
-| `/products-management`   | Admin product/category/brand CRUD    |
-| `/orders`                | Admin order management               |
-| `/stock`                 | Admin stock tracking                 |
+| Route                   | Description                               |
+| ----------------------- | ----------------------------------------- |
+| `/`                     | Homepage — carousel, trending, categories |
+| `/search?q=...`         | Search results with filters               |
+| `/<category>`           | Category product listing                  |
+| `/product/<slug>`       | Product detail page                       |
+| `/checkout`             | Checkout form                             |
+| `/auth/login`           | Sign in                                   |
+| `/auth/sign-up`         | Create account                            |
+| `/auth/forgot-password` | Password recovery                         |
+| `/history`              | Order history (authenticated)             |
+| `/dashboard`            | Admin dashboard overview                  |
+| `/products-management`  | Admin product/category/brand CRUD         |
+| `/orders`               | Admin order management                    |
+| `/stock`                | Admin stock tracking                      |
 
 ---
 
