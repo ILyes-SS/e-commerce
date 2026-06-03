@@ -36,8 +36,8 @@ const HomeCarousel = ({ slides }: { slides: CarouselSlide[] }) => {
                 className="w-full h-full absolute object-cover"
                 src={slide.imageUrl}
                 alt={slide.title || ""}
-                width={100}
-                height={100}
+                width={1000}
+                height={1000}
               />
             </div>
           </div>

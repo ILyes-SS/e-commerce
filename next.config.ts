@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "crytxsgaywtfzyafcngi.supabase.co",
+        port: "",
+        pathname: "/**", // This allows any path on that hostname
+      },
+      {
+        protocol: "https",
         hostname: "eduindex.org",
         port: "",
         pathname: "/**", // This allows any path on that hostname
