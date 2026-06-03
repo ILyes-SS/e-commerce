@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import Image from "next/image";
 import Link from "next/link";
-import { CarouselSlide } from "@/app/generated/prisma";
+import { CarouselSlide } from "@/app/generated/prisma/client";
 import { Button } from "./ui/button";
 import { Autoplay } from "swiper/modules";
 import "swiper/css/autoplay";

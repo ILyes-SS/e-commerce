@@ -8,7 +8,7 @@ import {
   NavigationMenuTrigger,
 } from "./ui/navigation-menu";
 import Link from "next/link";
-import { Category } from "@/app/generated/prisma";
+import { Category } from "@/app/generated/prisma/client";
 const NavBar = async () => {
   const categories = await getCategories();
   return (

@@ -43,7 +43,7 @@ export async function addToCartDb(
 ) {
   try {
     if (!cartId) {
-      throw new Error("Cart ID is required");
+      return { success: true };
     }
     if (!cartItem.id) {
       throw new Error("Product variant ID is required");
@@ -75,7 +75,7 @@ export async function removeFromCart() {}
 export async function clearCartDb(cartId: string | undefined) {
   try {
     if (!cartId) {
-      throw new Error("Cart ID is required");
+      return { success: true };
     }
     await prisma.cartItem.deleteMany({
       where: {
@@ -97,7 +97,7 @@ export async function decreaseItemQuantityDb(
       throw new Error("Product variant ID is required");
     }
     if (!cartId) {
-      throw new Error("Cart ID is required");
+      return { success: true };
     }
     let item = await prisma.cartItem.updateManyAndReturn({
       where: {
@@ -128,7 +128,7 @@ export async function increaseItemQuantityDb(
       throw new Error("Product variant ID is required");
     }
     if (!cartId) {
-      throw new Error("Cart ID is required");
+      return { success: true };
     }
     await prisma.cartItem.updateMany({
       where: {
@@ -150,6 +150,9 @@ export async function increaseItemQuantityDb(
 //each cart item has one unique
 export async function removeCartItemDb(variantId: string, cartId: string) {
   try {
+    if (!cartId) {
+      return { success: true };
+    }
     await prisma.cartItem.deleteMany({
       where: {
         prodVariantId: variantId,

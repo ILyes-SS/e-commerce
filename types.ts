@@ -4,7 +4,7 @@ import {
   ProductImage,
   ProductVariant,
   Stock,
-} from "./app/generated/prisma";
+} from "@/app/generated/prisma/client";
 
 export type CartItem = {
   id: string;

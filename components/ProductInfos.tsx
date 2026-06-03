@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/store/useCart";
 import { ProductVariantsImagesStock } from "@/types";
 import { addToCartDb, removeCartItemDb } from "@/actions/cart";
-import { ProductVariant } from "@/app/generated/prisma";
+import { ProductVariant } from "@/app/generated/prisma/client";
 
 const ProductInfos = ({ product }: { product: ProductVariantsImagesStock }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);

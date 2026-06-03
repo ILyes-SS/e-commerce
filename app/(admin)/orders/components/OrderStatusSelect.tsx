@@ -2,7 +2,7 @@
 
 import React, { useTransition } from "react";
 import { Select } from "@/components/ui/select";
-import { OrderStatus } from "@/app/generated/prisma";
+import { OrderStatus } from "@/app/generated/prisma/client";
 import { updateOrderStatus } from "@/actions/admin/orders";
 import { toast } from "sonner";
 

@@ -1,5 +1,5 @@
 "use client";
-import { Brand } from "@/app/generated/prisma";
+import { Brand } from "@/app/generated/prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./ui/button";

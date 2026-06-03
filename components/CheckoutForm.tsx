@@ -6,7 +6,7 @@ import { CartItem } from "@/types";
 import { useCart } from "@/store/useCart";
 import { createOrder } from "@/actions/order";
 import { User } from "@supabase/supabase-js";
-import { Wilaya } from "@/app/generated/prisma";
+import { Wilaya } from "@/app/generated/prisma/client";
 import {
   Card,
   CardContent,

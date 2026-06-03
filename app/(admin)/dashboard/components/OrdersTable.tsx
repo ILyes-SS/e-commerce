@@ -1,6 +1,6 @@
 "use client";
 
-import { OrderStatus } from "@/app/generated/prisma";
+import { OrderStatus } from "@/app/generated/prisma/client";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -13,7 +13,7 @@ import {
 
 type Order = {
   id: string;
-  name: string;
+  name: string | null;
   email: string;
   phone: string;
   total: number;
@@ -75,7 +75,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
               </TableCell>
               <TableCell>
                 <div>
-                  <p className="font-medium">{order.name}</p>
+                  <p className="font-medium">{order.name ?? "Guest"}</p>
                   <p className="text-xs text-muted-foreground">{order.email}</p>
                 </div>
               </TableCell>

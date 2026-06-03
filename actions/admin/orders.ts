@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { OrderStatus } from "@/app/generated/prisma";
+import { OrderStatus } from "@/app/generated/prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {

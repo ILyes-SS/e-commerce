@@ -5,14 +5,12 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
   output   = "../app/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 // 3. --- Enums ---
@@ -143,7 +141,7 @@ model CartItem {
 // --- Orders (Permanent) ---
 model Order {
   id     String   @id @default(uuid())
-  name   String // Customer name
+  name   String? // Customer name (nullable for guest/incomplete orders)
   email  String
   phone  String
   total  Float // Final price

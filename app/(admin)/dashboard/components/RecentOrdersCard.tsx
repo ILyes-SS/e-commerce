@@ -1,10 +1,10 @@
-import { OrderStatus } from "@/app/generated/prisma";
+import { OrderStatus } from "@/app/generated/prisma/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, CheckCircle, Truck, XCircle, Package } from "lucide-react";
 
 type Order = {
   id: string;
-  name: string;
+  name: string | null;
   total: number;
   status: OrderStatus;
 };
@@ -39,7 +39,7 @@ export default function RecentOrdersCard({ orders }: RecentOrdersCardProps) {
                   {statusIcons[order.status]}
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{order.name}</p>
+                  <p className="font-medium text-sm">{order.name ?? "Guest"}</p>
                   <p className="text-xs text-muted-foreground font-mono">
                     #{order.id.slice(0, 8)}
                   </p>

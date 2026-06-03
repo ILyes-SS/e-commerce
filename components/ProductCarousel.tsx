@@ -3,7 +3,7 @@ import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import Image from "next/image";
-import { ProductImage } from "@/app/generated/prisma";
+import { ProductImage } from "@/app/generated/prisma/client";
 import "swiper/css";
 import "swiper/css/pagination";
 

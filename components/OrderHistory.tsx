@@ -17,7 +17,7 @@ import {
   ProductVariant,
   Product,
   Wilaya,
-} from "@/app/generated/prisma";
+} from "@/app/generated/prisma/client";
 
 type OrderWithItems = Order & {
   items: (OrderProd & {
@@ -77,7 +77,7 @@ const OrderHistory = ({ orders }: OrderHistoryProps) => {
                 <CardDescription className="mt-2">
                   <div className="space-y-1">
                     <p>
-                      <span className="font-medium">Name:</span> {order.name}
+                      <span className="font-medium">Name:</span> {order.name ?? "Guest"}
                     </p>
                     <p>
                       <span className="font-medium">Email:</span> {order.email}

@@ -1,4 +1,4 @@
-import { Product, ProductVariant } from "@/app/generated/prisma";
+import { Product, ProductVariant } from "@/app/generated/prisma/client";
 import { CircleArrowDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

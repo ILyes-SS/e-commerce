@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { Category } from "@/app/generated/prisma";
+import { Category } from "@/app/generated/prisma/client";
 
 type CategoryWithSubcategories = Category & {
   subcategories?: CategoryWithSubcategories[];

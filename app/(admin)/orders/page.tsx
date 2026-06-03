@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { OrderStatus } from "@/app/generated/prisma";
+import { OrderStatus } from "@/app/generated/prisma/client";
 import OrderStatusSelect from "./components/OrderStatusSelect";
 
 async function getOrders() {
@@ -191,7 +191,7 @@ export default async function OrdersPage() {
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                           <span>
                             <span className="font-medium">Customer:</span>{" "}
-                            {order.name}
+                            {order.name ?? "Guest"}
                           </span>
                           <span>
                             <span className="font-medium">Email:</span>{" "}

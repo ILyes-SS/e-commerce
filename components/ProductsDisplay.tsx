@@ -1,4 +1,4 @@
-import { Product, ProductVariant } from "@/app/generated/prisma";
+import { Product, ProductVariant } from "@/app/generated/prisma/client";
 import ProductCard from "./ProductCard";
 import PriceFilter from "./PriceFilter";
 import SortProducts from "./SortProducts";
